@@ -1,0 +1,26 @@
+within HeatPumpModel.Experiments;
+model CMP_equation_Test
+  Modelica.Blocks.Math.RealToInteger realToInteger1
+    annotation (Placement(transformation(extent={{-44,-14},{-34,-4}})));
+  Modelica.Blocks.Sources.RealExpression Pel(y=1)
+    annotation (Placement(transformation(extent={{-78,-20},{-54,2}})));
+  Modelica.Blocks.Sources.RealExpression Tcond(y=308)
+    annotation (Placement(transformation(extent={{-78,-34},{-54,-12}})));
+  Modelica.Blocks.Sources.RealExpression Teva(y=266)
+    annotation (Placement(transformation(extent={{-78,-52},{-54,-30}})));
+  Components.CompressorConstantEquationFit_2 compressorConstantEquationFit_2
+    annotation (Placement(transformation(extent={{-10,-36},{28,-6}})));
+equation
+  connect(Pel.y, realToInteger1.u)
+    annotation (Line(points={{-52.8,-9},{-45,-9}}, color={0,0,127}));
+  connect(realToInteger1.y, compressorConstantEquationFit_2.Mode) annotation (
+      Line(points={{-33.5,-9},{-33.5,-9.3},{-8.1,-9.3}},     color={255,127,0}));
+  connect(Tcond.y, compressorConstantEquationFit_2.Tcond) annotation (Line(
+        points={{-52.8,-23},{-52.8,-23.7},{-8.1,-23.7}},
+        color={0,0,127}));
+  connect(Teva.y, compressorConstantEquationFit_2.Teva) annotation (Line(points={{-52.8,
+          -41},{-52.8,-42},{-18,-42},{-18,-30.3},{-8.1,-30.3}},
+        color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end CMP_equation_Test;

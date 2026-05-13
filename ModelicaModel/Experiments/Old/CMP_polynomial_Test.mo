@@ -1,0 +1,24 @@
+within HeatPumpModel.Experiments.Old;
+model CMP_polynomial_Test "Test polynomials with fixed speed and constatn inputs"
+  Modelica.Blocks.Math.RealToInteger realToInteger1
+    annotation (Placement(transformation(extent={{-44,-14},{-34,-4}})));
+  Modelica.Blocks.Sources.RealExpression Pel(y=1)
+    annotation (Placement(transformation(extent={{-78,-20},{-54,2}})));
+  Modelica.Blocks.Sources.RealExpression Tcond(y=308)
+    annotation (Placement(transformation(extent={{-78,-34},{-54,-12}})));
+  Modelica.Blocks.Sources.RealExpression Teva(y=266)
+    annotation (Placement(transformation(extent={{-70,-52},{-46,-30}})));
+  Components.CMP_poly_vs_2 cMP_poly_vs_2
+    annotation (Placement(transformation(extent={{-8,-34},{26,-6}})));
+equation
+  connect(Pel.y, realToInteger1.u)
+    annotation (Line(points={{-52.8,-9},{-45,-9}}, color={0,0,127}));
+  connect(realToInteger1.y, cMP_poly_vs_2.Mode) annotation (Line(points={{-33.5,
+          -9},{-33.5,-10},{-14,-10},{-14,-9.08},{-6.3,-9.08}}, color={255,127,0}));
+  connect(Tcond.y, cMP_poly_vs_2.Tcond) annotation (Line(points={{-52.8,-23},{
+          -52.8,-24},{-14,-24},{-14,-22.52},{-6.3,-22.52}}, color={0,0,127}));
+  connect(Teva.y, cMP_poly_vs_2.Teva) annotation (Line(points={{-44.8,-41},{
+          -44.8,-42},{-14,-42},{-14,-28.68},{-6.3,-28.68}}, color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end CMP_polynomial_Test;

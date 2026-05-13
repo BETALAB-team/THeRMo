@@ -1,0 +1,84 @@
+within HeatPumpModel.Components;
+model CMP_poly_vs_2
+
+  //Polynomial coefficients definition
+
+//     parameter Real el_coef[10] = {386.5864,3.235339,-0.7616182,0.1194096,0.08058198,0.215179,0.002509841,-0.00307912,0.00144556,-0.001730154};
+//     parameter Real ev_coef[10] = {3252.474,126.4527,-53.45925,1.92338,-1.031104,0.6149533,0.00867232,-0.01493142,0.000188762,-0.00411726};
+//     parameter Real cc_coef[10] = {23063.53543,1015.56806,-517.1277597,17.53530854,-22.91158901,9.061634778,0.104756711,-0.272989555,0.210613921,-0.074503046} "HRH054U4 Danfoss SH = 10 K SBC = 5 K";
+//     parameter Real el_coef[10] = {876.1403637,-39.82611698,57.76683426,-0.692542019,1.405959399,-0.322407086,-0.004151195,6.97E-03,-0.012434452,0.008498258} "HRH054U4 Danfoss SH = 10 K SBC = 5 K";
+//     parameter Real m_coef[10] = {364.3609034,16.87580007,-7.416902114,0.291539796,-0.393057063,0.169437224,0.00190869,-0.004316934,0.004557808,-0.001395934} "HRH054U4 Danfoss SH = 10 K SBC = 5 K";
+
+   ExternData.XLSFile dataSource(fileName=fileName)
+    annotation (Placement(transformation(extent={{-12,-12},{8,8}})));
+
+   Real cc_coef[10] = vector(dataSource.getRealArray2D("A2","Polynomials",10,1));
+   Real el_coef[10] = vector(dataSource.getRealArray2D("B2","Polynomials",10,1));
+   Real m_coef[10] = vector(dataSource.getRealArray2D("C2","Polynomials",10,1));
+
+  //Parameter definition
+  Modelica.Blocks.Interfaces.IntegerInput Mode "operating mode" annotation (Placement(transformation(extent={{-110,58},
+            {-70,98}}), iconTransformation(extent={{-110,58},{-70,98}})));
+  Modelica.Blocks.Interfaces.RealInput Tcond(unit="K") "condensing temperaure"  annotation (Placement(transformation(extent={{-110,
+            -38},{-70,2}}), iconTransformation(extent={{-110,-38},{-70,2}})));
+  Modelica.Blocks.Interfaces.RealInput Teva(unit="K") "evaporating temperature"  annotation (Placement(transformation(extent={{-110,
+            -82},{-70,-42}}), iconTransformation(extent={{-110,-82},{-70,-42}})));
+  Modelica.Blocks.Interfaces.RealOutput Wel(unit="W") "electrical power"  annotation (Placement(transformation(extent={{66,10},
+            {86,30}}), iconTransformation(extent={{66,10},{86,30}})));
+  Modelica.Blocks.Interfaces.RealOutput CC(start=5, unit="W") "cooling capacity" annotation (
+      Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=-90,
+        origin={40,-108}), iconTransformation(
+        extent={{-10,-10},{10,10}},
+        rotation=-90,
+        origin={44,-92})));
+  Modelica.Blocks.Interfaces.RealOutput HC(start=10, unit="W") "heating capacity" annotation (
+      Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={40,104}), iconTransformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={42,104})));
+  Modelica.Blocks.Interfaces.RealOutput m_ref(unit="kg/s") "refrigerant mass flow rate"
+                                                                                       annotation (Placement(transformation(extent={{66,-30},
+            {86,-10}}), iconTransformation(extent={{66,-30},{86,-10}})));
+
+  //Temperatures
+  protected Real t_vector[10] = {1,Teva_c,Tcond_c,Teva_c^2,Teva_c*Tcond_c, Tcond_c^2, Teva_c^3, Teva_c^2*Tcond_c, Teva_c*Tcond_c^2, Tcond_c^3} "polynomial equation";
+  protected Real Tcond_c = Tcond - 273.15 "conversion to [°C] for polynomial calculations";
+  protected Real Teva_c =Teva  - 273.15 "conversion to [°C] for polynomial calculations";
+
+public
+  parameter String fileName="C:/Users/benafra10167/Desktop/CMP_polynomial/Fixed_Speed_Danfoss/HRH054U4 polynomials.xls"
+    "File where poly coefficients are stored";
+equation
+    if Mode==1 then
+    Wel = el_coef * t_vector;
+    CC = -1*cc_coef*t_vector;
+    HC = -1*CC + Wel;
+    m_ref = (m_coef* t_vector)/3600 "report to kg/s";
+    else
+    Wel   = 0;
+    HC = 0;
+    CC = 0;
+    m_ref = 0;
+    end if;
+    annotation (Placement(transformation(extent={{-126,-114},{-86,-74}})),
+              Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+        Rectangle(
+          extent={{-68,92},{62,-80}},
+          lineColor={0,0,0},
+          lineThickness=1,
+          fillColor={255,255,255},
+          fillPattern=FillPattern.Solid),
+        Bitmap(extent={{-74,-64},{58,88}}, fileName=
+              "modelica://HeatPumpModel/../Incons/Immagine 2025-11-14 115923.png"),
+        Text(
+          extent={{-50,-58},{44,-92}},
+          textColor={0,0,0},
+          textString="%name
+")}),                                                            Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end CMP_poly_vs_2;

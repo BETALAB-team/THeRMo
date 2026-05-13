@@ -1,0 +1,45 @@
+within HeatPumpModel.Experiments;
+model Refrigerant_cycle_test_3 "Test refrigerant cycle with costant input"
+  Modelica.Blocks.Sources.RealExpression Tc(y=307.1)
+    annotation (Placement(transformation(extent={{-64,32},{-44,52}})));
+  Modelica.Blocks.Sources.RealExpression Te(y=262.43)
+    annotation (Placement(transformation(extent={{-64,-72},{-44,-52}})));
+  Modelica.Blocks.Sources.RealExpression Wel(y=2820.1545)
+    annotation (Placement(transformation(extent={{-64,6},{-44,26}})));
+  Modelica.Blocks.Sources.RealExpression HC(y=5)
+    annotation (Placement(transformation(extent={{-66,20},{-46,40}})));
+  Modelica.Blocks.Sources.RealExpression CC(y=8703.572)
+    annotation (Placement(transformation(extent={{-66,-58},{-46,-38}})));
+  Modelica.Blocks.Sources.RealExpression m_ref(y=0.048143364)
+    annotation (Placement(transformation(extent={{-64,-42},{-44,-22}})));
+  Components.Ref_cycle_vs_4 ref_cycle_vs_4(redeclare package Medium =
+        ExternalMedia.Media.CoolPropMedium (mediumName="R410A", substanceNames=
+            {"R410A"}) "R410A")
+    annotation (Placement(transformation(extent={{-12,-24},{24,12}})));
+  Modelica.Blocks.Sources.Step step(
+    height=-1,
+    offset=1,
+    startTime=4000)
+    annotation (Placement(transformation(extent={{-92,-16},{-72,4}})));
+  Modelica.Blocks.Math.RealToInteger realToInteger
+    annotation (Placement(transformation(extent={{-62,-16},{-42,4}})));
+equation
+  connect(Tc.y, ref_cycle_vs_4.Tcond) annotation (Line(points={{-43,42},{-22,42},
+          {-22,9.84},{-14.16,9.84}}, color={0,0,127}));
+  connect(HC.y, ref_cycle_vs_4.HC_map) annotation (Line(points={{-45,30},{-24,
+          30},{-24,3.72},{-14.16,3.72}}, color={0,0,127}));
+  connect(Wel.y, ref_cycle_vs_4.Wel_map) annotation (Line(points={{-43,16},{-28,
+          16},{-28,-1.32},{-14.16,-1.32}}, color={0,0,127}));
+  connect(m_ref.y, ref_cycle_vs_4.m_ref_map) annotation (Line(points={{-43,-32},
+          {-26,-32},{-26,-9.6},{-14.16,-9.6}}, color={0,0,127}));
+  connect(CC.y, ref_cycle_vs_4.CC_map) annotation (Line(points={{-45,-48},{-24,
+          -48},{-24,-18},{-22,-18},{-22,-15},{-14.16,-15}}, color={0,0,127}));
+  connect(Te.y, ref_cycle_vs_4.Teva) annotation (Line(points={{-43,-62},{-14.16,
+          -62},{-14.16,-20.76}}, color={0,0,127}));
+  connect(realToInteger.y, ref_cycle_vs_4.OnOff)
+    annotation (Line(points={{-41,-6},{-14.52,-6}}, color={255,127,0}));
+  connect(step.y, realToInteger.u) annotation (Line(points={{-71,-6},{-66,-6},{
+          -66,-8},{-64,-8},{-64,-6}}, color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end Refrigerant_cycle_test_3;

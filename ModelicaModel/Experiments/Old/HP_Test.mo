@@ -1,0 +1,58 @@
+within HeatPumpModel.Experiments.Old;
+model HP_Test
+  Components.HeatPump_vs_1 heatPump_vs_1(
+    redeclare package Medium = ExternalMedia.Media.CoolPropMedium (mediumName="R410A",
+          substanceNames={"R410A"}) "R410A",
+    redeclare package cond_medium = Modelica.Media.Water.StandardWaterOnePhase,
+    efficiency_cond=0.7,
+    m_flow_cond_nominal=1,
+    dp__cond_nominal=0,
+    redeclare package eva_medium =
+        Buildings.Media.Antifreeze.PropyleneGlycolWater(property_T=293.15, X_a=0.40),
+    efficiency_eva=0.7,
+    m_flow_eva_nominal=0.9,
+    dp__eva_nominal=0,
+    SH=7,
+    SBC=3) annotation (Placement(transformation(extent={{-22,-28},{36,24}})));
+  Modelica.Blocks.Math.RealToInteger realToInteger1
+    annotation (Placement(transformation(extent={{-76,-8},{-66,2}})));
+  Modelica.Blocks.Sources.RealExpression ON(y=1)
+    annotation (Placement(transformation(extent={{-106,-14},{-82,8}})));
+  Modelica.Fluid.Sources.MassFlowSource_T Load(
+    redeclare package Medium = Modelica.Media.Water.StandardWaterOnePhase,
+    use_m_flow_in=false,
+    m_flow=1,
+    T(displayUnit="degC") = 303.15,
+    nPorts=1) annotation (Placement(transformation(extent={{-62,44},{-42,64}})));
+  Modelica.Fluid.Sources.Boundary_ph Load_Volume(redeclare package Medium =
+        Modelica.Media.Water.StandardWaterOnePhase, nPorts=1)
+    annotation (Placement(transformation(extent={{-20,74},{0,94}})));
+  Modelica.Fluid.Sources.MassFlowSource_T Source(
+    redeclare package Medium = Buildings.Media.Antifreeze.PropyleneGlycolWater
+        (property_T=293.15, X_a=0.40),
+    use_m_flow_in=false,
+    use_T_in=false,
+    m_flow=0.9,
+    T=266.15,
+    nPorts=1)
+    annotation (Placement(transformation(extent={{-54,-76},{-34,-56}})));
+  Modelica.Fluid.Sources.Boundary_ph Source_Volume(redeclare package Medium =
+        Buildings.Media.Antifreeze.PropyleneGlycolWater (property_T=293.15, X_a
+          =0.40), nPorts=1)
+    annotation (Placement(transformation(extent={{-8,-98},{12,-78}})));
+equation
+  connect(ON.y, realToInteger1.u)
+    annotation (Line(points={{-80.8,-3},{-77,-3}}, color={0,0,127}));
+  connect(realToInteger1.y, heatPump_vs_1.OnOff) annotation (Line(points={{-65.5,
+          -3},{-65.5,-2},{-34,-2},{-34,-2.26},{-25.77,-2.26}}, color={255,127,0}));
+  connect(Load.ports[1], heatPump_vs_1.Load_in) annotation (Line(points={{-42,
+          54},{-13.3,54},{-13.3,26.6}}, color={0,127,255}));
+  connect(Load_Volume.ports[1], heatPump_vs_1.Load_out) annotation (Line(points
+        ={{0,84},{27.3,84},{27.3,26.6}}, color={0,127,255}));
+  connect(Source.ports[1], heatPump_vs_1.Source_in) annotation (Line(points={{
+          -34,-66},{-13.3,-66},{-13.3,-30.6}}, color={0,127,255}));
+  connect(Source_Volume.ports[1], heatPump_vs_1.Source_out) annotation (Line(
+        points={{12,-88},{27.3,-88},{27.3,-30.6}}, color={0,127,255}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end HP_Test;

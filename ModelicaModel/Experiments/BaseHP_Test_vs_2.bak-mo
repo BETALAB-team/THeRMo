@@ -1,0 +1,81 @@
+within HeatPumpModel.Experiments;
+model BaseHP_Test_vs_2
+  import Modelica;
+  Modelica.Blocks.Math.RealToInteger realToInteger1
+    annotation (Placement(transformation(extent={{-36,-6},{-26,4}})));
+  Components.BaseHP_vs_3 baseHP_vs_3(
+    redeclare package cond_medium = Modelica.Media.Water.StandardWaterOnePhase,
+    efficiency_cond=0.9,
+    m_flow_cond_nominal=0.1,
+    dp__cond_nominal=0,
+    redeclare package eva_medium = Buildings.Media.Air,
+    efficiency_eva=0.9,
+    m_flow_eva_nominal=0.1,
+    dp__eva_nominal=0)
+    annotation (Placement(transformation(extent={{4,-14},{26,10}})));
+  Modelica.Fluid.Sources.MassFlowSource_T Load(
+    redeclare package Medium = Modelica.Media.Water.StandardWaterOnePhase,
+    use_m_flow_in=false,
+    m_flow=0.1,
+    T(displayUnit="K") = 293.15,
+    nPorts=1) annotation (Placement(transformation(extent={{-44,20},{-24,40}})));
+  Modelica.Fluid.Sources.MassFlowSource_T Source(
+    redeclare package Medium = Buildings.Media.Air,
+    use_m_flow_in=false,
+    use_T_in=true,
+    m_flow=0.1,
+    T=278.15,
+    nPorts=1)
+    annotation (Placement(transformation(extent={{-44,-42},{-24,-22}})));
+  Modelica.Fluid.Sources.Boundary_ph Load_Volume(redeclare package Medium =
+        Modelica.Media.Water.StandardWaterOnePhase, nPorts=1)
+    annotation (Placement(transformation(extent={{0,48},{20,68}})));
+  Modelica.Fluid.Sources.Boundary_ph Source_Volume(redeclare package Medium =
+        Buildings.Media.Air,                        nPorts=1)
+    annotation (Placement(transformation(extent={{24,-56},{44,-36}})));
+  Modelica.Fluid.Sensors.Temperature T_load_out(redeclare package Medium =
+        Modelica.Media.Water.StandardWaterOnePhase)
+    annotation (Placement(transformation(extent={{68,18},{88,38}})));
+  Modelica.Fluid.Sensors.Temperature T_source_out(redeclare package Medium =
+        Buildings.Media.Air)
+    annotation (Placement(transformation(extent={{70,-24},{90,-4}})));
+  Modelica.Blocks.Sources.Sine sine(
+    amplitude=5,
+    f=1/86400,
+    offset=7)
+    annotation (Placement(transformation(extent={{-92,-30},{-80,-18}})));
+  Modelica.Blocks.Math.Add CtoK
+    annotation (Placement(transformation(extent={{-68,-32},{-58,-22}})));
+  Modelica.Blocks.Sources.Constant Kelvin(k=273.15)
+    annotation (Placement(transformation(extent={{-92,-56},{-82,-46}})));
+  Modelica.Blocks.Sources.RealExpression Pel(y=1)
+    annotation (Placement(transformation(extent={{-66,-10},{-50,8}})));
+equation
+  connect(realToInteger1.y, baseHP_vs_3.OnOff) annotation (Line(points={{-25.5,
+          -1},{-25.5,0},{-6,0},{-6,-2},{1.36,-2}},          color={255,127,0}));
+  connect(Load.ports[1], baseHP_vs_3.Load_in) annotation (Line(points={{-24,30},
+          {12.14,30},{12.14,11.2}},color={0,127,255}));
+  connect(Source.ports[1], baseHP_vs_3.Source_in) annotation (Line(points={{-24,-32},
+          {12.8,-32},{12.8,-15.44}},     color={0,127,255}));
+  connect(Load_Volume.ports[1], baseHP_vs_3.Load_out) annotation (Line(points={{20,58},
+          {28,58},{28,11.2},{18.3,11.2}},            color={0,127,255}));
+  connect(Source_Volume.ports[1], baseHP_vs_3.Source_out) annotation (Line(
+        points={{44,-46},{48,-46},{48,-20},{19.4,-20},{19.4,-15.44}}, color={0,
+          127,255}));
+  connect(baseHP_vs_3.Source_out, T_source_out.port) annotation (Line(points={{19.4,
+          -15.44},{19.4,-20},{48,-20},{48,-30},{80,-30},{80,-24}},      color={
+          0,127,255}));
+  connect(T_load_out.port, baseHP_vs_3.Load_out) annotation (Line(points={{78,18},
+          {78,11.2},{18.3,11.2}},        color={0,127,255}));
+  connect(sine.y, CtoK.u1) annotation (Line(points={{-79.4,-24},{-69,-24}},
+                           color={0,0,127}));
+  connect(Kelvin.y, CtoK.u2) annotation (Line(points={{-81.5,-51},{-81.5,-52},{
+          -74,-52},{-74,-30},{-69,-30}}, color={0,0,127}));
+  connect(CtoK.y, Source.T_in) annotation (Line(points={{-57.5,-27},{-57.5,-24},
+          {-52,-24},{-52,-28},{-46,-28}}, color={0,0,127}));
+  connect(Pel.y, realToInteger1.u)
+    annotation (Line(points={{-49.2,-1},{-37,-1}}, color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)),
+    experiment(StopTime=86400, __Dymola_Algorithm="Dassl"));
+end BaseHP_Test_vs_2;

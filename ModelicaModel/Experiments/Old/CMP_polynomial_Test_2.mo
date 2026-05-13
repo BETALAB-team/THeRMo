@@ -1,0 +1,30 @@
+within HeatPumpModel.Experiments.Old;
+model CMP_polynomial_Test_2 "Test polynomials with variabile speed"
+  Modelica.Blocks.Math.RealToInteger realToInteger1
+    annotation (Placement(transformation(extent={{-26,4},{-16,14}})));
+  Modelica.Blocks.Sources.RealExpression Status(y=1)
+    annotation (Placement(transformation(extent={{-82,4},{-58,26}})));
+  Modelica.Blocks.Sources.RealExpression Tcond(y=303)
+    annotation (Placement(transformation(extent={{-78,-14},{-54,8}})));
+  Modelica.Blocks.Sources.RealExpression Teva(y=263)
+    annotation (Placement(transformation(extent={{-80,-52},{-56,-30}})));
+  Modelica.Blocks.Sources.RealExpression Frequency(y=100)
+    annotation (Placement(transformation(extent={{-80,-34},{-56,-12}})));
+  Components.CMP_poly_vs_3 cMP_poly_vs_3(fileName=
+        "C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Danfoss/VZH028CH polynomials.xls",
+      CMP_type="Variable speed 30 coeff")
+    annotation (Placement(transformation(extent={{0,-26},{44,14}})));
+equation
+  connect(Status.y, realToInteger1.u) annotation (Line(points={{-56.8,15},{-32,
+          15},{-32,9},{-27,9}}, color={0,0,127}));
+  connect(realToInteger1.y, cMP_poly_vs_3.Mode) annotation (Line(points={{-15.5,9},
+          {-4.84,9},{-4.84,-8}},   color={255,127,0}));
+  connect(Tcond.y, cMP_poly_vs_3.Tcond) annotation (Line(points={{-52.8,-3},{
+          -52.8,-4},{-6,-4},{-6,10.8},{-4.4,10.8}},color={0,0,127}));
+  connect(Frequency.y, cMP_poly_vs_3.CMP_f) annotation (Line(points={{-54.8,-23},
+          {-54.8,-24},{-32,-24},{-32,3.2},{-4.4,3.2}},  color={0,0,127}));
+  connect(Teva.y, cMP_poly_vs_3.Teva) annotation (Line(points={{-54.8,-41},{
+          -54.8,-42},{-8,-42},{-8,-19.2},{-4.4,-19.2}},color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end CMP_polynomial_Test_2;

@@ -1,0 +1,155 @@
+within HeatPumpModel.Components;
+model Condenser_variable_UA_rel
+  "Used relative mass flow rates and relative KA"
+  extends Buildings.Fluid.Interfaces.TwoPortHeatMassExchanger(redeclare final
+      Buildings.Fluid.MixingVolumes.MixingVolume vol(final
+          prescribedHeatFlowRate=false, nPorts=3));
+
+  //Get polynomial coefficents
+  inner parameter ExternData.XLSXFile dataSource(
+                                                fileName=fileName)
+  annotation (Placement(transformation(extent={{-30,26},{-10,46}})));
+  Real m_coeff[5] = vector(dataSource.getRealArray2D("A2","Polynomials",5,1));
+
+  //Relative values to use the equation
+  Real m_flow_rel(  unit = "kg/s") "relative secondary fluid flow rate";
+  Real m_ref_rel(  unit = "kg/s") "relative srefrigerant fluid flow rate";
+
+  parameter Real m_ref_nom(  unit = "kg/s") "Nominal refrigerant mass flow rate [kg/s]";
+  parameter Real UA_nom(  unit = "W/K") "Nominal UA value";
+
+  Buildings.HeatTransfer.Sources.PrescribedHeatFlow preHeaFlo annotation (
+      Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={-36,-66})));
+  Modelica.Blocks.Interfaces.RealInput HeatFlow(unit="W") annotation (Placement(
+        transformation(
+        extent={{-12,-12},{12,12}},
+        rotation=90,
+        origin={-40,-112}), iconTransformation(
+        extent={{-12,-12},{12,12}},
+        rotation=90,
+        origin={-40,-112})));
+
+  Modelica.Blocks.Interfaces.RealOutput RefT(unit="K") "Medium temperature"
+    annotation (Placement(transformation(extent={{100,-40},{120,-20}})));
+  Buildings.Fluid.Sensors.Temperature SensEF(redeclare package Medium =
+        Medium, warnAboutOnePortConnection=false)
+    annotation (Placement(transformation(extent={{-18,74},{2,94}})));
+  Buildings.Fluid.Sensors.Temperature SensExF(redeclare package Medium =
+        Medium, warnAboutOnePortConnection=false)
+    annotation (Placement(transformation(extent={{30,24},{50,44}})));
+  Modelica.Blocks.Interfaces.RealOutput T_out(unit="K") "Medium temperature"
+    annotation (Placement(transformation(extent={{100,24},{120,44}})));
+
+  Modelica.Units.SI.SpecificHeatCapacity cp= Medium.specificHeatCapacityCp(sta_default)
+    "Density, used to compute fluid volume";
+
+  Modelica.Thermal.HeatTransfer.Sensors.HeatFlowSensor heaFlo "Heat flow sensor"
+    annotation (
+      Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={-36,-40})));
+
+  Modelica.Blocks.Interfaces.RealOutput T_in "Temperature in port medium"
+    annotation (Placement(transformation(extent={{100,60},{120,80}}),
+        iconTransformation(extent={{100,60},{120,80}})));
+
+  Modelica.Blocks.Sources.RealExpression realExpression(y=SensEF.T+ HeatFlow /(efficiency*Buildings.Utilities.Math.Functions.smoothMax(port_a.m_flow,1e-4,1e-5)*cp))
+    annotation (Placement(transformation(extent={{36,-40},{56,-20}})));
+
+
+  // Efficency equations
+  Modelica.Blocks.Interfaces.RealInput m_ref(unit="kg/s") annotation (Placement(
+        transformation(
+        extent={{-11,-11},{11,11}},
+        rotation=90,
+        origin={61,-107}),iconTransformation(
+        extent={{-11,-11},{11,11}},
+        rotation=90,
+        origin={39,-111})));
+  Real m_vector[5] = { m_ref_rel,m_ref_rel^2,m_flow_rel,m_flow_rel^2, m_ref_rel*m_flow_rel} "polynomial equation";
+  Real efficiency "HE efficiency";
+  Real NTU "Number of transfer unit";
+  Real UA "Heat transfer/ area product";
+
+  parameter String fileName= fileName_cond;
+
+equation
+  m_flow_rel  = port_a.m_flow / m_flow_nominal;
+  m_ref_rel = m_ref / m_ref_nom;
+  UA =  smooth(1,noEvent(if m_ref < 1e-7 then 1e-4 else (m_vector * m_coeff)*UA_nom));
+  NTU = UA/(Buildings.Utilities.Math.Functions.smoothMax(port_a.m_flow,1e-4,1e-5) * cp);
+  efficiency = Buildings.Utilities.Math.Functions.smoothMax(1 - Modelica.Constants.e^(-NTU),1e-4,1e-5);
+
+  connect(heaFlo.port_b, vol.heatPort) annotation (Line(points={{-36,-30},{-36,
+          -30},{-36,-10},{-9,-10}}, color={191,0,0}));
+  connect(preHeaFlo.port, heaFlo.port_a)
+    annotation (Line(points={{-36,-56},{-36,-50}}, color={191,0,0}));
+  connect(preHeaFlo.Q_flow, HeatFlow) annotation (Line(points={{-36,-76},{-36,-94},
+          {-36,-112},{-40,-112}},color={0,0,127}));
+  connect(port_a,SensEF. port)
+    annotation (Line(points={{-100,0},{-64,0},{-64,56},{-8,56},{-8,74}},
+                                                         color={0,127,255}));
+  connect(SensExF.port, vol.ports[3])
+    annotation (Line(points={{40,24},{40,0},{1,0}}, color={0,127,255}));
+  connect(SensExF.T, T_out)
+    annotation (Line(points={{47,34},{110,34}}, color={0,0,127}));
+  connect(SensEF.T, T_in) annotation (Line(points={{-1,84},{96,84},{96,70},{110,
+          70}},      color={0,0,127}));
+  connect(realExpression.y, RefT)
+    annotation (Line(points={{57,-30},{110,-30}}, color={0,0,127}));
+  annotation (
+defaultComponentName="evaCon",
+Documentation(info="<html>
+<p>
+Model for a constant temperature evaporator or condenser based on a &epsilon;-NTU
+heat exchanger model.
+</p>
+<p>
+The heat exchanger effectiveness is calculated from the number of transfer units
+(NTU):
+</p>
+<p align=\"center\" style=\"font-style:italic;\">
+&epsilon; = 1 - exp(UA &frasl; (m&#775; c<sub>p</sub>))
+</p>
+<p>
+Optionally, this model can have a flow resistance.
+If no flow resistance is requested, set <code>dp_nominal=0</code>.
+</p>
+<h4>Limitations</h4>
+<p>
+This model does not consider any superheating or supercooling on the refrigerant
+side. The refrigerant is considered to exchange heat at a constant temperature
+throughout the heat exchanger.
+</p>
+</html>",
+revisions="<html>
+<ul>
+<li>
+March 7, 2022, by Michael Wetter:<br/>
+Removed <code>massDynamics</code>.<br/>
+This is for
+<a href=\"https://github.com/ibpsa/modelica-ibpsa/issues/1542\">#1542</a>.
+</li>
+<li>
+May 27, 2017, by Filip Jorissen:<br/>
+Regularised heat transfer around zero flow.<br/>
+This is for
+<a href=\"https://github.com/lbl-srg/modelica-buildings/issues/769\">#769</a>.
+</li>
+<li>
+April 12, 2017, by Michael Wetter:<br/>
+Corrected invalid syntax for computing the specific heat capacity.<br/>
+This is for
+<a href=\"https://github.com/lbl-srg/modelica-buildings/issues/707\">#707</a>.
+</li>
+<li>
+October 11, 2016, by Massimo Cimmino:<br/>
+First implementation.
+</li>
+</ul>
+</html>"));
+end Condenser_variable_UA_rel;

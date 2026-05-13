@@ -1,0 +1,16 @@
+within HeatPumpModel.Components;
+model T_check "Temperature error check"
+  parameter Real DeltaT( unit = "K") "Maximum error ammitted for temperatures";
+  Modelica.Blocks.Interfaces.RealInput T_input "Temperature input "
+    annotation (Placement(transformation(extent={{140,-20},{100,20}})));
+  Modelica.Blocks.Interfaces.RealOutput T_output "Temperature output"
+    annotation (Placement(transformation(extent={{-100,-18},{-136,18}}),
+        iconTransformation(extent={{-100,-18},{-136,18}})));
+equation
+  when abs(T_input - pre(T_input)) <= DeltaT then
+       T_output = T_input;
+  end when;
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+
+end T_check;

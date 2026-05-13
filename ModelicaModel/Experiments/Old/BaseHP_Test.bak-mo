@@ -1,0 +1,49 @@
+within HeatPumpModel.Experiments;
+model BaseHP_Test
+  import Modelica;
+  Modelica.Blocks.Math.RealToInteger realToInteger1
+    annotation (Placement(transformation(extent={{-24,-4},{-14,6}})));
+  Buildings.Fluid.Sources.MassFlowSource_T boundary(
+    redeclare package Medium = Buildings.Media.Air "Moist air",
+    use_m_flow_in=false,
+    m_flow=1,
+    use_T_in=false,
+    T=266.15,
+    nPorts=1)
+    annotation (Placement(transformation(extent={{-38,-48},{-18,-28}})));
+  Buildings.Fluid.Sources.MassFlowSource_T boundary1(
+    redeclare package Medium = Buildings.Media.Water "Water",
+    use_m_flow_in=false,
+    m_flow=1,
+    use_T_in=false,
+    T=308.15,
+    nPorts=1) annotation (Placement(transformation(extent={{-40,20},{-20,40}})));
+  Components.BaseHP_vs_3 baseHP_vs_3(redeclare package eva_medium =
+        Buildings.Media.Air)
+    annotation (Placement(transformation(extent={{0,-16},{30,14}})));
+  Modelica.Blocks.Sources.RealExpression Pel(y=1)
+    annotation (Placement(transformation(extent={{-60,-10},{-36,12}})));
+  Modelica.Fluid.Sources.Boundary_ph Load_Volume(redeclare package Medium =
+        Modelica.Media.Water.StandardWaterOnePhase, nPorts=1)
+    annotation (Placement(transformation(extent={{12,48},{32,68}})));
+  Modelica.Fluid.Sources.Boundary_ph Source_Volume1(redeclare package Medium =
+        Modelica.Media.Water.StandardWaterOnePhase, nPorts=1)
+    annotation (Placement(transformation(extent={{0,-70},{20,-50}})));
+equation
+  connect(boundary1.ports[1], baseHP_vs_3.Load_in) annotation (Line(points={{
+          -20,30},{11.7,30},{11.7,14.3}}, color={0,127,255}));
+  connect(boundary.ports[1], baseHP_vs_3.Source_in) annotation (Line(points={{
+          -18,-38},{11.4,-38},{11.4,-16.9}}, color={0,127,255}));
+  connect(Pel.y, realToInteger1.u)
+    annotation (Line(points={{-34.8,1},{-25,1}}, color={0,0,127}));
+  connect(realToInteger1.y, baseHP_vs_3.OnOff) annotation (Line(points={{-13.5,
+          1},{-13.5,-0.1},{-3.9,-0.1}}, color={255,127,0}));
+  connect(Load_Volume.ports[1], baseHP_vs_3.Load_out) annotation (Line(points={
+          {32,58},{36,58},{36,18},{19.8,18},{19.8,14.3}}, color={0,127,255}));
+  connect(Source_Volume1.ports[1], baseHP_vs_3.Source_out) annotation (Line(
+        points={{20,-60},{24,-60},{24,-20},{18,-20},{18,-16.9}}, color={0,127,
+          255}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)),
+    experiment(StopTime=86400, __Dymola_Algorithm="Dassl"));
+end BaseHP_Test;

@@ -1,0 +1,118 @@
+within HeatPumpModel.Components;
+model Condenser_variable_efficency
+  "Evaporator or condenser with refrigerant experiencing constant temperature phase change"
+  extends Buildings.Fluid.Interfaces.TwoPortHeatMassExchanger(redeclare final
+      Buildings.Fluid.MixingVolumes.MixingVolume vol(final
+        prescribedHeatFlowRate=false, nPorts=3));
+
+  Buildings.HeatTransfer.Sources.PrescribedHeatFlow preHeaFlo annotation (
+      Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={-36,-70})));
+  Modelica.Blocks.Interfaces.RealInput HeatFlow(unit="W") annotation (Placement(
+        transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={-36,-110}), iconTransformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={-36,-110})));
+
+  Modelica.Blocks.Interfaces.RealOutput RefT(unit="K", start = 293.15) "Medium temperature"
+    annotation (Placement(transformation(extent={{-10,-10},{10,10}},
+        rotation=180,
+        origin={-110,-82})));
+  Buildings.Fluid.Sensors.Temperature Tin(redeclare package Medium = Medium,
+      warnAboutOnePortConnection=false)
+    annotation (Placement(transformation(extent={{-62,48},{-42,68}})));
+  Buildings.Fluid.Sensors.Temperature Tout(redeclare package Medium = Medium,
+      warnAboutOnePortConnection=false)
+    annotation (Placement(transformation(extent={{26,60},{46,80}})));
+  Modelica.Units.SI.SpecificHeatCapacity cp=
+      Medium.specificHeatCapacityCp(sta_default)
+    "Density, used to compute fluid volume";
+  Modelica.Thermal.HeatTransfer.Sensors.HeatFlowSensor heaFlo
+    "Heat flow sensor"
+    annotation (
+      Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=90,
+        origin={-36,-40})));
+  Real NTU "Number of Heat Transfer Unit";
+  Real efficiency "HE efficency";
+  Real DTMLG( unit = "K") "Mean logaritmic temperature difference";
+equation
+  if abs(Tout.T -Tin.T) >= 1e-4 then
+    DTMLG = ((RefT - Tout.T)-(RefT - Tin.T))/log((RefT- Tout.T)/(RefT - Tin.T));
+  else
+    DTMLG = RefT - Tin.T;
+  end if;
+  NTU = HeatFlow/(port_a.m_flow*cp*DTMLG);
+  efficiency = 1- Modelica.Constants.e^(-NTU) "Efficency evaluated considering a costant temperature change and neglecting SH and SBC in the HE";
+  RefT = Tin.T + HeatFlow/(efficiency*port_a.m_flow*cp);
+  connect(heaFlo.port_b, vol.heatPort) annotation (Line(points={{-36,-30},{-36,
+          -30},{-36,-10},{-9,-10}}, color={191,0,0}));
+  connect(preHeaFlo.port, heaFlo.port_a)
+    annotation (Line(points={{-36,-60},{-36,-50}}, color={191,0,0}));
+  connect(preHeaFlo.Q_flow, HeatFlow) annotation (Line(points={{-36,-80},{-36,-110}},
+                                 color={0,0,127}));
+  connect(port_a, Tin.port) annotation (Line(points={{-100,0},{-64,0},{-64,44},{
+          -52,44},{-52,48}}, color={0,127,255}));
+  connect(Tout.port, vol.ports[3])
+    annotation (Line(points={{36,60},{36,0},{1,0}}, color={0,127,255}));
+    annotation (Placement(transformation(extent={{-96,-68},{-76,-48}})),
+defaultComponentName="evaCon",
+Documentation(info="<html>
+<p>
+Model for a constant temperature evaporator or condenser based on a &epsilon;-NTU
+heat exchanger model.
+</p>
+<p>
+The heat exchanger effectiveness is calculated from the number of transfer units
+(NTU):
+</p>
+<p align=\"center\" style=\"font-style:italic;\">
+&epsilon; = 1 - exp(UA &frasl; (m&#775; c<sub>p</sub>))
+</p>
+<p>
+Optionally, this model can have a flow resistance.
+If no flow resistance is requested, set <code>dp_nominal=0</code>.
+</p>
+<h4>Limitations</h4>
+<p>
+This model does not consider any superheating or supercooling on the refrigerant
+side. The refrigerant is considered to exchange heat at a constant temperature
+throughout the heat exchanger.
+</p>
+</html>",
+revisions="<html>
+<ul>
+<li>
+March 7, 2022, by Michael Wetter:<br/>
+Removed <code>massDynamics</code>.<br/>
+This is for
+<a href=\"https://github.com/ibpsa/modelica-ibpsa/issues/1542\">#1542</a>.
+</li>
+<li>
+May 27, 2017, by Filip Jorissen:<br/>
+Regularised heat transfer around zero flow.<br/>
+This is for
+<a href=\"https://github.com/lbl-srg/modelica-buildings/issues/769\">#769</a>.
+</li>
+<li>
+April 12, 2017, by Michael Wetter:<br/>
+Corrected invalid syntax for computing the specific heat capacity.<br/>
+This is for
+<a href=\"https://github.com/lbl-srg/modelica-buildings/issues/707\">#707</a>.
+</li>
+<li>
+October 11, 2016, by Massimo Cimmino:<br/>
+First implementation.
+</li>
+</ul>
+</html>"));
+
+  //Numerical control to avoid initialization problems
+
+end Condenser_variable_efficency;

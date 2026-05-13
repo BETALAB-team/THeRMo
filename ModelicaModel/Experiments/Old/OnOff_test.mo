@@ -1,0 +1,12 @@
+within HeatPumpModel.Experiments.Old;
+model OnOff_test
+  Components.OldHeat.OnOff onOff
+    annotation (Placement(transformation(extent={{-16,-12},{6,12}})));
+  Modelica.Blocks.Sources.RealExpression realExpression(y=-200)
+    annotation (Placement(transformation(extent={{-76,-10},{-56,10}})));
+equation
+  connect(realExpression.y, onOff.Building_Load)
+    annotation (Line(points={{-55,0},{-18.86,0}}, color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end OnOff_test;

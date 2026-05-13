@@ -1,0 +1,28 @@
+within HeatPumpModel.Experiments.Old;
+model Refrigerant_cycle_test
+  Modelica.Blocks.Sources.RealExpression Tc(y=293)
+    annotation (Placement(transformation(extent={{-64,18},{-44,38}})));
+  Modelica.Blocks.Sources.RealExpression Te(y=283)
+    annotation (Placement(transformation(extent={{-64,2},{-44,22}})));
+  Modelica.Blocks.Sources.RealExpression Wel(y=1700)
+    annotation (Placement(transformation(extent={{-64,-16},{-44,4}})));
+  Modelica.Blocks.Sources.RealExpression HC(y=5)
+    annotation (Placement(transformation(extent={{-64,-30},{-44,-10}})));
+  Modelica.Blocks.Sources.RealExpression CC(y=5000)
+    annotation (Placement(transformation(extent={{-64,-48},{-44,-28}})));
+  Components.Ref_cycle_vs_1 ref_cycle_vs_1
+    annotation (Placement(transformation(extent={{-4,-20},{22,6}})));
+equation
+  connect(Tc.y, ref_cycle_vs_1.Tcond) annotation (Line(points={{-43,28},{-12,28},
+          {-12,3.92},{-5.56,3.92}}, color={0,0,127}));
+  connect(Te.y, ref_cycle_vs_1.Teva) annotation (Line(points={{-43,12},{-14,12},
+          {-14,-0.24},{-5.56,-0.24}}, color={0,0,127}));
+  connect(Wel.y, ref_cycle_vs_1.Wel) annotation (Line(points={{-43,-6},{-10,-6},
+          {-10,-4.4},{-5.56,-4.4}}, color={0,0,127}));
+  connect(HC.y, ref_cycle_vs_1.HC) annotation (Line(points={{-43,-20},{-10,-20},
+          {-10,-8.82},{-5.56,-8.82}}, color={0,0,127}));
+  connect(CC.y, ref_cycle_vs_1.CC) annotation (Line(points={{-43,-38},{-5.56,
+          -38},{-5.56,-13.24}}, color={0,0,127}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end Refrigerant_cycle_test;

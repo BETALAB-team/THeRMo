@@ -1,0 +1,124 @@
+within HeatPumpModel.Components;
+model HeatPump_with_ref_cycle_1
+  "BaseHP with poly calculations combined with refrigerant cycle"
+  BaseHP_vs_3 baseHP_vs_3(
+    redeclare package cond_medium = cond_medium,
+    efficiency_cond=efficiency_cond,
+    m_flow_cond_nominal=m_flow_cond_nominal,
+    dp__cond_nominal=dp__cond_nominal,
+    redeclare package eva_medium = eva_medium,
+    efficiency_eva=efficiency_eva,
+    m_flow_eva_nominal=m_flow_eva_nominal,
+    dp__eva_nominal=dp__eva_nominal,
+    fileName=fileName)
+    annotation (Placement(transformation(extent={{-80,-22},{-16,32}})));
+  Ref_cycle_vs_2 ref_cycle_vs_2(SH=SH, SBC=SBC,
+  redeclare package Medium = Medium)
+    annotation (Placement(transformation(extent={{30,-24},{84,30}})));
+  replaceable package Medium = ExternalMedia.Media.CoolPropMedium(
+        mediumName = "R410a",
+        substanceNames = {"R410a"})
+        annotation (choices(choice(redeclare package Medium = ExternalMedia.Media.CoolPropMedium(mediumName = "R290",substanceNames = {"R290"}) "R290"),
+                            choice(redeclare package Medium = ExternalMedia.Media.CoolPropMedium(mediumName = "R32",substanceNames = {"R32"})
+                                                                                                                                             "R32"),
+                            choice(redeclare package Medium = ExternalMedia.Media.CoolPropMedium(mediumName = "R410A",substanceNames = {"R410A"})
+                                                                                                                                                 "R410A")),Dialog(group = "Refrigerant"));
+  replaceable package cond_medium = Modelica.Media.Interfaces.PartialMedium
+    annotation (choicesAllMatching=true,Dialog(group="Condenser"));
+  parameter Real efficiency_cond=0.9 annotation (Dialog(group="Condenser"));
+  parameter Modelica.Units.SI.MassFlowRate m_flow_cond_nominal
+    "Nominal mass flow rate" annotation (Dialog(group="Condenser"));
+  parameter Modelica.Units.SI.PressureDifference dp__cond_nominal
+    "Pressure difference" annotation (Dialog(group="Condenser"));
+  replaceable package eva_medium = Modelica.Media.Interfaces.PartialMedium
+    annotation (choicesAllMatching=true,Dialog(group="Evaporator"));
+  parameter Real efficiency_eva=0.9 annotation (Dialog(group="Evaporator"));
+  parameter Modelica.Units.SI.MassFlowRate m_flow_eva_nominal
+    "Nominal mass flow rate" annotation (Dialog(group="Evaporator"));
+  parameter Modelica.Units.SI.PressureDifference dp__eva_nominal
+    "Pressure difference" annotation (Dialog(group="Evaporator"));
+  parameter String fileName="C:/Users/benafra10167/Desktop/CMP_polynomial/Fixed_Speed_Danfoss/HRH054U4 polynomials.xls"
+    "File where external data is stored" annotation (Dialog(group="CMP"));
+  parameter Real SH "superheat" annotation (Dialog(group="Refrigerant"));
+  parameter Real SBC "subcooling" annotation (Dialog(group="Refrigerant"));
+  Modelica.Blocks.Interfaces.RealOutput HC_ref
+    "heating capacity calculated with refrigerant cycle" annotation (Placement(
+        transformation(extent={{100,20},{120,40}}), iconTransformation(extent={
+            {100,20},{120,40}})));
+  Modelica.Blocks.Interfaces.RealOutput CC_ref
+    "heating capacity calculated with refrigerant cycle" annotation (Placement(
+        transformation(extent={{100,-40},{120,-20}}), iconTransformation(extent
+          ={{100,-40},{120,-20}})));
+  Modelica.Blocks.Interfaces.IntegerInput OnOff annotation (Placement(
+        transformation(extent={{-126,-14},{-100,12}}), iconTransformation(
+          extent={{-126,-14},{-100,12}})));
+  Modelica.Fluid.Interfaces.FluidPort_a Load_in
+    "Fluid connector a (positive design flow direction is from port_a to port_b)"
+    annotation (Placement(transformation(extent={{-80,100},{-60,120}}),
+        iconTransformation(extent={{-80,100},{-60,120}})));
+  Modelica.Fluid.Interfaces.FluidPort_b Load_out
+    "Fluid connector b (positive design flow direction is from port_a to port_b)"
+    annotation (Placement(transformation(extent={{60,100},{80,120}}),
+        iconTransformation(extent={{60,100},{80,120}})));
+  Modelica.Fluid.Interfaces.FluidPort_a Source_in
+    "Fluid connector a (positive design flow direction is from port_a to port_b)"
+    annotation (Placement(transformation(extent={{-80,-120},{-60,-100}}),
+        iconTransformation(extent={{-80,-120},{-60,-100}})));
+  Modelica.Fluid.Interfaces.FluidPort_b Source_out
+    "Fluid connector b (positive design flow direction is from port_a to port_b)"
+    annotation (Placement(transformation(extent={{60,-120},{80,-100}}),
+        iconTransformation(extent={{60,-120},{80,-100}})));
+equation
+  connect(baseHP_vs_3.Tcond, ref_cycle_vs_2.Tcond) annotation (Line(points={{-10.24,
+          26.6},{-10.24,26},{26,26},{26,28},{28,28},{28,26.76},{26.76,26.76}},
+                                                 color={0,0,127}));
+  connect(baseHP_vs_3.HC, ref_cycle_vs_2.HC) annotation (Line(points={{-9.6,
+          18.5},{24,18.5},{24,18},{26,18},{26,17.58},{26.76,17.58}},
+                                   color={0,0,127}));
+  connect(baseHP_vs_3.Wel, ref_cycle_vs_2.Wel) annotation (Line(points={{-10.24,
+          9.86},{-10.24,10.02},{26.76,10.02}},       color={0,0,127}));
+  connect(baseHP_vs_3.m_ref, ref_cycle_vs_2.m_ref) annotation (Line(points={{-9.6,
+          -2.56},{18,-2.56},{18,-2.4},{26.76,-2.4}},     color={0,0,127}));
+  connect(baseHP_vs_3.CC, ref_cycle_vs_2.Teva) annotation (Line(points={{-9.6,
+          -11.2},{-9.6,-11.04},{26.76,-11.04}},    color={0,0,127}));
+  connect(baseHP_vs_3.Teva, ref_cycle_vs_2.CC) annotation (Line(points={{-9.6,
+          -18.22},{-9.6,-18},{26,-18},{26,-18.6},{26.76,-18.6}},
+                                                          color={0,0,127}));
+  connect(ref_cycle_vs_2.HC_ref, HC_ref) annotation (Line(points={{90.21,18.39},
+          {90.21,30},{110,30}}, color={0,0,127}));
+  connect(baseHP_vs_3.Load_in, Load_in) annotation (Line(points={{-56.32,34.7},
+          {-56.32,92},{-70,92},{-70,110}}, color={0,127,255}));
+  connect(baseHP_vs_3.Load_out, Load_out) annotation (Line(points={{-38.4,34.7},
+          {-38.4,62},{-38,62},{-38,92},{70,92},{70,110}}, color={0,127,255}));
+  connect(Load_in, Load_in)
+    annotation (Line(points={{-70,110},{-70,110}}, color={0,127,255}));
+  connect(baseHP_vs_3.Source_in, Source_in) annotation (Line(points={{-54.4,
+          -25.24},{-54.4,-64},{-70,-64},{-70,-110}}, color={0,127,255}));
+  connect(baseHP_vs_3.Source_out, Source_out) annotation (Line(points={{-35.2,
+          -25.24},{-35.2,-64},{70,-64},{70,-110}}, color={0,127,255}));
+  connect(Source_out, Source_out)
+    annotation (Line(points={{70,-110},{70,-110}}, color={0,127,255}));
+  connect(Load_out, Load_out)
+    annotation (Line(points={{70,110},{70,110}}, color={0,127,255}));
+  connect(CC_ref, CC_ref)
+    annotation (Line(points={{110,-30},{110,-30}}, color={0,0,127}));
+  connect(ref_cycle_vs_2.CC_ref, CC_ref) annotation (Line(points={{90.21,-8.07},
+          {90,-8.07},{90,-30},{110,-30}}, color={0,0,127}));
+  connect(OnOff, baseHP_vs_3.OnOff) annotation (Line(points={{-113,-1},{-88,-1},
+          {-88,0},{-88.32,0},{-88.32,9.32}}, color={255,127,0}));
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+        Rectangle(
+          extent={{-100,100},{100,-100}},
+          lineColor={0,0,0},
+          fillColor={255,255,255},
+          fillPattern=FillPattern.Solid,
+          lineThickness=1),
+        Bitmap(extent={{-96,-72},{96,94}}, fileName=
+              "modelica://HeatPumpModel/../Incons/Immagine 2025-11-14 130229.png"),
+        Text(
+          extent={{-58,-62},{84,-106}},
+          textColor={0,0,0},
+          textString="%name
+")}),                                                            Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end HeatPump_with_ref_cycle_1;

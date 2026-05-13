@@ -1,0 +1,33 @@
+within HeatPumpModel.Components;
+model Dew_T_calculation
+  "Model for calculation of the DewPoint Temperature"
+
+// Define the medium type
+   replaceable package Medium = ExternalMedia.Media.CoolPropMedium(
+        mediumName = "R410a",
+        substanceNames = {"R410a"})
+        annotation (choices(choice(redeclare package Medium = ExternalMedia.Media.CoolPropMedium(mediumName = "R290",substanceNames = {"R290"}) "R290"),
+                            choice(redeclare package Medium = ExternalMedia.Media.CoolPropMedium(mediumName = "R32",substanceNames = {"R32"})
+                                                                                                                                             "R32"),
+                            choice(redeclare package Medium = ExternalMedia.Media.CoolPropMedium(mediumName = "R410A",substanceNames = {"R410A"})
+                                                                                                                                                 "R410A")));
+
+//Define Input and Output
+  Modelica.Blocks.Interfaces.RealInput T_eva_in( unit = "K", displayUnit ="degC") "Temperature at the evaporator inlet"
+    annotation (Placement(transformation(extent={{-140,-20},{-100,20}})));
+  Modelica.Blocks.Interfaces.RealOutput T_dew(  unit = "K", displayUnit ="degC") "Dew point temperature "
+    annotation (Placement(transformation(extent={{100,-18},{136,18}}),
+        iconTransformation(extent={{100,-18},{136,18}})));
+ Real Peva(unit = "Pa") "evaporation pressure";
+ Real h_vs( unit = "J/kg") "enthaply of saturated vapour";
+ Medium.ThermodynamicState dewState "saturated vapor status at the exit of the evaporator";
+ Medium.SaturationProperties sat "saturation conditions";
+equation
+  Peva =Medium.saturationPressure(T_eva_in) "assumed Peva = P_ls, deltaP neglected";
+  sat = Medium.setSat_p(Peva) "saturation conditions at Peva";
+  h_vs = sat.hv "enthalpy of saturated vapour at pressure Peva";
+  dewState = Medium.setState_ph(Peva,h_vs) "dew point at cmp inlet";
+  T_dew = dewState.T "saturated vapour temperature at compressor inlet";
+  annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+        coordinateSystem(preserveAspectRatio=false)));
+end Dew_T_calculation;
