@@ -30,6 +30,7 @@ model Ref_cycle_reversible_vs_1 "Reversible refrigerant cycle model"
   parameter Real SH(unit="K") = 10 "superheat";
   parameter Real SBC(unit="K") = 5 "subcooling";
   parameter Real F=1 "Dabiri Correlation parameter";
+  parameter Real f_el "Electrical losses trhough compressor envelope and oil";
   parameter Real PP_eva(unit="K") = 2 "Evaporator pinch point";
   parameter Real PP_cond(unit="K") = 2 "Condenser pinch point";
   Real SH_map(unit="K") = scalar(dataSource.getRealArray2D("D2", "Polynomials")) "superheat at which the polynomials are  defined";
@@ -51,6 +52,7 @@ model Ref_cycle_reversible_vs_1 "Reversible refrigerant cycle model"
   Real h2(unit="J/kg") "enthalpy at condenser inlet";
   Real h2_unb(unit="J/kg") "unbonded enthalpy at condenser inlet";
   Real h2_iso_map(unit="J/kg") "isoentropic enthalpy at condenser inlet in standard conditions";
+  //Real h2_cond_in( unit ="J/kg") "enthalpy at the condenser inlet";
   Real h2_iso(unit="J/kg") "isoentropic enthalpy at condenser inlet";
   Real h2_max(unit="J/kg") "max enthalpy at cmp discharge";
   Real hcond_vs(unit="J/kg") "saturated vapor enthalpy at condenser";
@@ -228,7 +230,7 @@ equation
   m_ref = m_ref_map*(1 + F*(d1/d1_map - 1));
   Wel_ref_unb = Wel_map*m_ref*(h2_iso - h1)/(Buildings.Utilities.Math.Functions.smoothMax(m_ref_map, 1e-4, 1e-5)*(h2_iso_map - h1_map));
   h2_unb = Buildings.Utilities.Math.Functions.smoothMax(
-    Wel_ref_unb/max(m_ref, 1e-4) + h1,
+    Wel_ref_unb*(1-f_el)/max(m_ref, 1e-4) + h1,
     h1,
     1e-5) "enthalpy at compressor outlet without upper limitation";
   h2_max = Medium.specificEnthalpy_pT(
@@ -237,17 +239,22 @@ equation
     1) "maximum enthalpy allowed at the outlet of the compressor";
   h2 = Buildings.Utilities.Math.Functions.smoothMin(h2_unb, h2_max, 1e-5) "real entalpy at the condenser outlet";
   T2 = Medium.temperature_ph(Pcond, h2);
+  //h2_cond_in = (h2 + hcond_vs)/2;
 
   //-------------- Calculation of Energy Balances--------------------------------------------------------------------------------------------------------------------------------------------------
 
   Wel_ref = Buildings.Utilities.Math.Functions.smoothMax(
-    m_ref*(h2 - h1),
+    m_ref*(h2 - h1)/(1-f_el),
     1e-4,
     1e-5) "calculation of cmp power using the refrigerant cycle";
   HC_ref = Buildings.Utilities.Math.Functions.smoothMax(
     m_ref*(h2 - h3),
     1e-4,
     1e-5) "calculation of heating capacity using the refrigerant cycle";
+  //HC_ref = Buildings.Utilities.Math.Functions.smoothMax(
+    //m_ref*(h2_cond_in - h3),
+    //1e-4,
+    //1e-5) "calculation of heating capacity using the refrigerant cycle";
   CC_ref = Buildings.Utilities.Math.Functions.smoothMax(
     m_ref*(h1 - h4),
     1e-4,

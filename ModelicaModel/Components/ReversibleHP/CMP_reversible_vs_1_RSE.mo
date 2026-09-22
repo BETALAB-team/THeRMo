@@ -1,5 +1,5 @@
 within HeatPumpModel.Components.ReversibleHP;
-model CMP_reversible_vs_1 "Reversible compressor model"
+model CMP_reversible_vs_1_RSE "Reversible compressor model, modified version to validate model for RSE"
 
   //--------------Import data----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,7 +69,10 @@ model CMP_reversible_vs_1 "Reversible compressor model"
                        choice = "C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Danfoss/VZH028CH polynomials.xlsx"));
   parameter String CMP_type = "Fixed speed" annotation (choices(choice = "Fixed speed", choice = "Variable speed 20 coeff",choice = "Variable speed 30 coeff"));
   parameter Real minF( unit = "Hz") "minimum compressor frequency";
-
+  parameter Real scale_cc "Scale factor for CC";
+  parameter Real scale_w "Scale factor for Wel";
+  parameter Real eps_cc "intercept for CC";
+  parameter Real eps_w "intercept for Wel";
 
  //------------------Temperatures-----------------------------------------------------------------------------------------------------------------------------------------------------------------
   Real Tcond_c( unit = "degC") "Condensing temperature in °C";
@@ -129,14 +132,10 @@ model CMP_reversible_vs_1 "Reversible compressor model"
                                     Tcond_c^3*CMP_f^2}
                                      "30 coefficients polynomial equation";
 
-
   // =================EQUATION BLOCK===============================================================================================================================================================
 
-
-public
-
-
  //------------------Temperature calculation -----------------------------------------------------------------------------------------------------------------------------------------------------
+
 equation
   if HP_operative_status == 1 then
      Tcond_c = Tref_1 - 273.15;
@@ -163,8 +162,8 @@ equation
       HC = CC + Wel;
 
     elseif CMP_type == "Variable speed 30 coeff" then
-      Wel = Buildings.Utilities.Math.Functions.smoothMax( el_coef_30 * t_vector_30,0,1e-5);
-      CC = Buildings.Utilities.Math.Functions.smoothMax(cc_coef_30 * t_vector_30,0,1e-5);
+      Wel = Buildings.Utilities.Math.Functions.smoothMax( el_coef_30 * t_vector_30,0,1e-5)*scale_w + eps_w;
+      CC = Buildings.Utilities.Math.Functions.smoothMax(cc_coef_30 * t_vector_30,0,1e-5)*scale_cc + eps_cc;
       HC = CC + Wel;
 
   end if;
@@ -184,4 +183,4 @@ equation
       Interval=59.9999616,
       Tolerance=1e-05,
       __Dymola_Algorithm="Radau"));
-end CMP_reversible_vs_1;
+end CMP_reversible_vs_1_RSE;

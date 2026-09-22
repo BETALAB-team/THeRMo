@@ -1,5 +1,5 @@
 within HeatPumpModel.Components.ReversibleHP;
-model PlateHE_vs_1 "Exponential UA formulation as function of mass flow rates"
+model PlateHE_RSE_vs_1 "Exponential UA formulation as function of mass flow rates"
 
   // ------------Extend existing component---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -38,6 +38,8 @@ model PlateHE_vs_1 "Exponential UA formulation as function of mass flow rates"
   Real Pow_sec(unit="W") "Heat capacity calculated in the secondary side";
   Real T_ref( unit = "K") "refrigerant temperature";
   Real HeatFlow( unit="W") "heatflow";
+  Real C_factor( unit = "W") "calibration parameter";
+
 
   // ------------Define input parameters-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,7 +54,6 @@ model PlateHE_vs_1 "Exponential UA formulation as function of mass flow rates"
   parameter Real UA_nom_cool(unit="W/K") "Nominal UA value cooling";
   parameter Modelica.Units.SI.Time Tau_cost_PHE(displayUnit="min") = 900 "Time Constant of Condenser";
   parameter Modelica.Units.SI.Volume V "Volume";
-  parameter Real K_UA "Optimization parameter";
 
 
   // ------------Define blocks-------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,6 +98,7 @@ model PlateHE_vs_1 "Exponential UA formulation as function of mass flow rates"
   Modelica.Blocks.Interfaces.RealOutput Pow_secondary(unit="W") = Pow_sec "Heat transferred ore removed to the secondary fluid"
     annotation (Placement(transformation(extent={{100,-52},{120,-32}}), iconTransformation(extent={{100,-52},{120,-32}})));
   Modelica.Blocks.Interfaces.IntegerInput HP_operative_status annotation (Placement(transformation(extent={{-122,68},{-100,90}}), iconTransformation(extent={{-122,68},{-100,90}})));
+  Modelica.Blocks.Interfaces.RealInput HC_exp annotation (Placement(transformation(extent={{-124,28},{-100,52}}), iconTransformation(extent={{-124,28},{-100,52}})));
 
   // =================EQUATION BLOCK===============================================================================================================================================================
 
@@ -118,7 +120,7 @@ equation
   // ------------Selection of calculation of UA method---------------------------------------------------------------------------------------------------------------------------------------------
 
   if UA_value_PHE == "Nominal value" then
-    UA = K_UA * UA_nom;
+    UA = C_factor * UA_nom;
   elseif UA_value_PHE == "Parametric correlation" then
     if HP_operative_status ==1 then
       UA = Buildings.Utilities.Math.Functions.smoothMax((m_coeff_H[1]+ m_coeff_H[2] * m_ref_rel + m_coeff_H[3]* m_ref_rel ^2 + m_coeff_H[4]* m_flow_rel +
@@ -130,16 +132,17 @@ equation
   end if;
 
   // ------------Evaluation of the efficency and CC -----------------------------------------------------------------------------------------------------------------------------------------------
-
+  C_factor = HC_exp/deMultiplex2.y1[1];
   NTU = UA/(m_flow_safe*cp);
+
   if HP_operative_status ==1 then
       UA_nom = UA_nom_heat;
       HeatFlow = deMultiplex2.y1[1];
-      T_ref = Buildings.Utilities.Math.Functions.smoothMax(SensEF.T + deMultiplex2.y1[1]/(efficiency*m_flow_safe*cp),SensExF.T,1e-5);
+      T_ref = Buildings.Utilities.Math.Functions.smoothMax(SensEF.T +  deMultiplex2.y1[1]/(efficiency*m_flow_safe*cp),SensExF.T,1e-5);
   else
       UA_nom = UA_nom_cool;
       HeatFlow = -deMultiplex2.y1[1];
-      T_ref = Buildings.Utilities.Math.Functions.smoothMin(SensEF.T -deMultiplex2.y1[1]/(efficiency*m_flow_safe*cp),SensExF.T,1E-5);
+      T_ref = Buildings.Utilities.Math.Functions.smoothMin(SensEF.T -  deMultiplex2.y1[1]/(efficiency*m_flow_safe*cp),SensExF.T,1E-5);
   end if;
 
   efficiency = Buildings.Utilities.Math.Functions.smoothMax(
@@ -203,4 +206,4 @@ First implementation.
 </li>
 </ul>
 </html>"));
-end PlateHE_vs_1;
+end PlateHE_RSE_vs_1;

@@ -1,5 +1,5 @@
 within HeatPumpModel.Components.ReversibleHP;
-model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and switch operation"
+model Reversible_HP_vs_3_RSE "Model used for RSE validation"
 
    //---------------Components---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -9,6 +9,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
     SBC=SBC,
     redeclare package Medium = Medium,
     F=F,
+    f_el = f_el,
     PP_eva=PP_HE2,
     PP_cond=PP_HE1) annotation (Placement(transformation(extent={{26,-16},{60,18}})));
   PlateHE_vs_1 PHE(
@@ -25,8 +26,9 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
     fileNameH = fileName_HE1_heat,
     fileNameC = fileName_HE1_cool,
     V=V_HE1,
-    Tau_cost_PHE = Tau_cost_HE1) annotation (Placement(transformation(extent={{28,58},{58,88}})));
-  FinCoil_vs_2 FinCoil(
+    Tau_cost_PHE = Tau_cost_HE1,
+    K_UA = K_UA) annotation (Placement(transformation(extent={{28,58},{58,88}})));
+  FinCoil_vs_1 FinCoil(
     redeclare package Medium = HE2_medium,
     m_flow_nominal=m_flow_HE2_nominal,
     m_f_nom_heat=m_flow_HE2_nominal_heat,
@@ -36,26 +38,18 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
     UA_nom_heat = UA_nom_heat_HE2,
     UA_nom_cool = UA_nom_cool_HE2,
     V=V_HE2,
-    Tau_cost_FC = Tau_cost_HE2) annotation (Placement(transformation(extent={{34,-56},{64,-86}})));
+    Tau_cost_FC = Tau_cost_HE2,
+    K_UA = K_UA_HE2) annotation (Placement(transformation(extent={{34,-56},{64,-86}})));
 
-  Control_vs_3 control_vs_3(Tset=Tset,
-    DeltaTup=DeltaTup,
-    DeltaTlow=DeltaTlow,
-    controllerType_heat=controllerType_heat,
-    k_heat=k_heat,
-    Ti_heat=Ti_heat,
-    Td_heating=Td_heating,
-    controllerType_cool=controllerType_cool,
-    k_cool=k_cool,
-    Ti_cool=Ti_cool,
-    Td_cool=Td_cool,
-    f_nominal=f_nominal,
-    Tdelay = Tdelay) annotation (Placement(transformation(extent={{-94,-10},{-74,10}})));
-
-  CMP_reversible_vs_1 CMP_reversible(
+  CMP_reversible_vs_1_RSE CMP_reversible(
     fileName=fileName,
     CMP_type=CMP_type,
-    minF=minF) annotation (Placement(transformation(extent={{-50,-12},{-24,14}})));
+    minF=minF,
+    scale_w=scale_w,
+    scale_cc=scale_cc,
+    eps_cc=eps_cc,
+    eps_w=eps_w) annotation (Placement(transformation(extent={{-50,-12},{-24,14}})));
+
   Modelica.Fluid.Sensors.Temperature TsourceIn(redeclare package Medium = HE2_medium) annotation (Placement(transformation(extent={{0,-54},{20,-34}})));
   Modelica.Fluid.Sensors.Temperature TloadIn(redeclare package Medium = HE1_medium) annotation (Placement(transformation(extent={{-2,32},{18,52}})));
 
@@ -81,7 +75,8 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
   Modelica.Blocks.Interfaces.RealOutput Efficency "Coefficient of performance" annotation (Placement(transformation(extent={{100,-50},{120,-30}}),iconTransformation(extent={{100,-50},{120,-30}})));
   Modelica.Blocks.Math.Division division annotation (Placement(transformation(extent={{80,34},{94,48}})));
   Modelica.Blocks.Interfaces.RealOutput Efficency_System "System_Efficency" annotation (Placement(transformation(extent={{106,32},{126,52}}), iconTransformation(extent={{100,30},{120,50}})));
-   Modelica.Blocks.Interfaces.RealInput Tmeas1 annotation (Placement(transformation(extent={{-132,-8},{-116,8}}), iconTransformation(extent={{-132,-8},{-116,8}})));
+  Modelica.Blocks.Interfaces.RealInput CMP_f1            "Compressor frequency / speed " annotation (Placement(transformation(extent={{-126,-12},{-108,6}}),  iconTransformation(extent={{-126,-12},{-108,6}})));
+  Modelica.Blocks.Interfaces.IntegerInput StatusInput annotation (Placement(transformation(extent={{-124,8},{-110,22}}), iconTransformation(extent={{-124,8},{-110,22}})));
   //---------------Medium Replaceble Packages-----------------------------------------------------------------------------------------------------------------------------------------------------
 
   replaceable package Medium = ExternalMedia.Media.CoolPropMedium (mediumName="R410a", substanceNames={"R410a"}) annotation (choices(
@@ -102,12 +97,20 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
       choice="C:/Users/benafra10167/Desktop/CMP_polynomial/Fixed_Speed_Danfoss/HRH054U4 polynomials.xlsx",
       choice="C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Danfoss/VRJ028-K polynomials.xlsx",
       choice="C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Danfoss/VZH028CH polynomials.xlsx",
-      choice="C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Copeland/XHV0181P-9E9-ED3015A polynomials.xlsx"), Dialog(group="CMP"));
+      choice="C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Copeland/XHV0181P-9E9-ED3015A polynomials.xlsx",
+       choice="C:/Users/benafra10167/Desktop/CMP_polynomial/Fixed_Speed_Copeland/ZH04KCU-PFJ_R290_polynomials.xlsx"), Dialog(group="CMP"));
   parameter String CMP_type="Fixed speed" annotation (choices(
       choice="Fixed speed",
       choice="Variable speed 20 coeff",
-      choice="Variable speed 30 coeff"), Dialog(group="CMP"));
+    choice="Variable speed 30 coeff"), Dialog(group="CMP"));
+  parameter Real f_el "Electrical losses parameter"
+                                                   annotation (Dialog(group="CMP"));
   parameter Real minF( unit = "Hz") "minimum compressor frequency" annotation (Dialog(group="CMP"));
+  parameter Real scale_cc "scaling factor cooling capacity" annotation (Dialog(group="CMP"));
+  parameter Real scale_w "scaling factor power" annotation (Dialog(group="CMP"));
+  parameter Real eps_cc "intercept factor cooling capacity" annotation (Dialog(group="CMP"));
+  parameter Real eps_w "intercept factor power" annotation (Dialog(group="CMP"));
+
 
   //-------------Input Parameters HE1--------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -118,6 +121,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
   parameter Real m_ref_nom_cool(unit="kg/s") "Nominal refrigerant mass flow rate [kg/s] cooling" annotation (Dialog(group="HE1"));
   parameter Modelica.Units.SI.PressureDifference dp_HE1_nominal "Pressure difference" annotation (Dialog(group="HE1"));
   parameter Real PP_HE1(unit="K") = 2 "Condenser pinch point" annotation (Dialog(group="HE1"));
+  parameter Real K_UA "Optimization parameter" annotation (Dialog(group="HE1"));
   parameter Real UA_nom_heat_HE1(unit="W/K") "Nominal UA value" annotation (Dialog(group="HE1"));
   parameter Real UA_nom_cool_HE1(unit="W/K") "Nominal UA value" annotation (Dialog(group="HE1"));
   parameter Modelica.Units.SI.Volume V_HE1 "Volume" annotation (Dialog(group="HE1"));
@@ -137,6 +141,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
   parameter Modelica.Units.SI.MassFlowRate m_flow_HE2_nominal_heat "Nominal mass flow rate heating" annotation (Dialog(group="HE2"));
   parameter Modelica.Units.SI.MassFlowRate m_flow_HE2_nominal_cool "Nominal mass flow rate cooling" annotation (Dialog(group="HE2"));
   parameter Modelica.Units.SI.PressureDifference dp_HE2_nominal "Pressure difference" annotation (Dialog(group="HE2"));
+  parameter Real K_UA_HE2 "Optimization parameter" annotation (Dialog(group="HE2"));
   parameter Real PP_HE2(unit="K")  "Evaporator pinch point" annotation (Dialog(group="HE2"));
   parameter Real UA_nom_heat_HE2(unit="W/K") "Heat transfer/ area product" annotation (Dialog(group="HE2"));
   parameter Real UA_nom_cool_HE2(unit="W/K") "Nominal UA value" annotation (Dialog(group="HE2"));
@@ -144,27 +149,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
   parameter Modelica.Units.SI.Time Tau_cost_HE2(displayUnit="min") "Time Constant of Eva Filter" annotation (Dialog(group="HE2"));
   parameter String UA_value_HE2="Select how to calculate UA" annotation (choices(choice="Nominal value", choice="Parametric correlation"), Dialog(group="HE2"));
 
-
   //------------------------------------Control parameters ----------------------------------------------------------------------------------------------------------------------------------------
-  parameter String HP_main_operation="Select the main HP operation mode"  annotation (choices(
-      choice="Heating Mode",
-      choice="Cooling Mode"), Dialog(group="Control"));
-  parameter Real Tset( unit = "K")
-                                  "set point temperature" annotation (Dialog(group="Control"));
-  parameter Real DeltaTup( unit = "K") "upper temperature dead band" annotation (Dialog(group="Control"));
-  parameter Real DeltaTlow( unit = "K") "lower temperature dead band" annotation (Dialog(group="Control"));
-  parameter Modelica.Blocks.Types.SimpleController controllerType_heat=Modelica.Blocks.Types.SimpleController.PI "Type of controller" annotation (Dialog(group="Control"));
-  parameter Real k_heat=1 "Gain of controller" annotation (Dialog(group="Control"));
-  parameter Modelica.Units.SI.Time Ti_heat=0.5 "Time constant of Integrator block" annotation (Dialog(group="Control"));
-  parameter Modelica.Units.SI.Time Td_heating=0.1 "Time constant of Derivative block" annotation (Dialog(group="Control"));
-  parameter Modelica.Blocks.Types.SimpleController controllerType_cool=Modelica.Blocks.Types.SimpleController.PI "Type of controller" annotation (Dialog(group="Control"));
-  parameter Real k_cool=1 "Gain of controller" annotation (Dialog(group="Control"));
-  parameter Modelica.Units.SI.Time Ti_cool=0.5 "Time constant of Integrator block" annotation (Dialog(group="Control"));
-  parameter Modelica.Units.SI.Time Td_cool=0.1 "Time constant of Derivative block" annotation (Dialog(group="Control"));
-  parameter Real f_nominal( unit = "Hz")
-                                        "nominal compressor frequency" annotation (Dialog(group="CMP"));
-  parameter Real Tdelay( unit = "s") "time dealy of compressor turning ON"
-                                                                          annotation (Dialog(group="Control"));
 
   record box
     Modelica.Units.SI.Pressure Pcond "Total condensing pressure";
@@ -187,6 +172,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
 
   box Output;
 
+
 equation
 
    Output.Pcond = ref_cycle_reversible_vs_1_1.Pcond;
@@ -201,10 +187,9 @@ equation
    Output.HC = ref_cycle_reversible_vs_1_1.HC_ref;
    Output.HeatLoad = PHE.Pow_sec;
    Output.CC = ref_cycle_reversible_vs_1_1.CC_ref;
-   Output.CMP_f = control_vs_3.CMP_f;
-   Output.HP_mode =control_vs_3.HP_operative_mode;
-   Output.HP_target =control_vs_3.HP_target;
-
+   Output.CMP_f = CMP_f1;
+   Output.HP_mode = 1;
+   Output.HP_target = 1;
 
 
   connect(Load_in, Load_in) annotation (Line(points={{-110,72},{-110,72}}, color={0,127,255}));
@@ -237,16 +222,17 @@ equation
                                                                                                                                               color={0,0,127}));
   connect(ref_cycle_reversible_vs_1_1.T_ref_2, FinCoil.RefT) annotation (Line(points={{23.96,-9.2},{22,-9.2},{22,-10},{-20,-10},{-20,-63.5},{32.5,-63.5}},
                                                                                                                                          color={0,0,127}));
-  connect(control_vs_3.HP_operative_status, CMP_reversible.HP_operative_status) annotation (Line(points={{-73,2},{-51.69,2},{-51.69,3.47}},                 color={255,127,0}));
-  connect(control_vs_3.CMP_f, CMP_reversible.CMP_f) annotation (Line(points={{-73,-2.2},{-73,-1.73},{-51.69,-1.73}}, color={0,0,127}));
-  connect(control_vs_3.Tmeas, Tmeas1) annotation (Line(points={{-94.8,0},{-124,0}}, color={0,0,127}));
-  connect(control_vs_3.HP_operative_status, PHE.HP_operative_status) annotation (Line(points={{-73,2},{-68,2},{-68,84.85},{26.35,84.85}}, color={255,127,0}));
-  connect(control_vs_3.HP_operative_status, FinCoil.HP_operative_status) annotation (Line(points={{-73,2},{-68,2},{-68,-82.85},{32.35,-82.85}}, color={255,127,0}));
   connect(Load_in, PHE.port_a) annotation (Line(points={{-110,72},{-2,72},{-2,73},{28,73}}, color={0,127,255}));
   connect(PHE.port_b, TloadOut.port_a) annotation (Line(points={{58,73},{60,74},{76,74}}, color={0,127,255}));
   connect(TloadOut.port_b, Load_out) annotation (Line(points={{96,74},{110,74}}, color={0,127,255}));
   connect(FinCoil.port_b, TsourceOut.port_a) annotation (Line(points={{64,-71},{64,-72},{72,-72}}, color={0,127,255}));
   connect(TsourceOut.port_b, Source_out) annotation (Line(points={{92,-72},{110,-72}}, color={0,127,255}));
+  connect(CMP_reversible.HP_operative_status, FinCoil.HP_operative_status) annotation (Line(points={{-51.69,3.47},{-58,3.47},{-58,-82.85},{32.35,-82.85}}, color={255,127,0}));
+  connect(CMP_reversible.CMP_f, CMP_f1) annotation (Line(points={{-51.69,-1.73},{-52,-1.73},{-52,-2},{-86,-2},{-86,-3},{-117,-3}},
+                                                                                                                     color={0,0,127}));
+  connect(PHE.HP_operative_status, CMP_reversible.HP_operative_status)
+    annotation (Line(points={{26.35,84.85},{-12,84.85},{-12,84},{-58,84},{-58,4},{-54,4},{-54,3.47},{-51.69,3.47}}, color={255,127,0}));
+  connect(CMP_reversible.HP_operative_status, StatusInput) annotation (Line(points={{-51.69,3.47},{-58,3.47},{-58,15},{-117,15}}, color={255,127,0}));
   annotation (Icon(graphics={
         Rectangle(
           extent={{-80,80},{80,-80}},
@@ -266,4 +252,4 @@ equation
       StopTime=436320,
       Interval=60,
       __Dymola_Algorithm="Radau"));
-end Reversible_HP_vs_3;
+end Reversible_HP_vs_3_RSE;

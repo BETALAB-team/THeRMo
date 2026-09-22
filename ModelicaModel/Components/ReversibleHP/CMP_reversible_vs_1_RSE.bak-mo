@@ -1,5 +1,5 @@
 within HeatPumpModel.Components.ReversibleHP;
-model CMP_reversible_vs_1 "Reversible compressor model"
+model CMP_reversible_vs_1_RSE "Reversible compressor model, modified version to validate model for RSE"
 
   //--------------Import data----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -62,6 +62,10 @@ model CMP_reversible_vs_1 "Reversible compressor model"
         origin={113,-21})));
   Modelica.Blocks.Interfaces.IntegerInput HP_operative_status annotation (Placement(transformation(extent={{-126,6},{-100,32}}), iconTransformation(extent={{-126,6},{-100,32}})));
   Modelica.Blocks.Interfaces.IntegerOutput HP_operative_status_out annotation (Placement(transformation(extent={{100,6},{126,32}}), iconTransformation(extent={{100,6},{126,32}})));
+  Modelica.Blocks.Interfaces.RealInput MultiplierW "Multiplier of the electrical power obtained from polynomials"
+    annotation (Placement(transformation(extent={{-140,-82},{-100,-42}}), iconTransformation(extent={{-126,-72},{-100,-46}})));
+  Modelica.Blocks.Interfaces.RealInput MultiplierCC "Multiplier of the cooling capacity obtained from polynomials"
+    annotation (Placement(transformation(extent={{-140,-120},{-100,-80}}),iconTransformation(extent={{-126,-112},{-100,-86}})));
 
   //------------------String parameter-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,7 +73,6 @@ model CMP_reversible_vs_1 "Reversible compressor model"
                        choice = "C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Danfoss/VZH028CH polynomials.xlsx"));
   parameter String CMP_type = "Fixed speed" annotation (choices(choice = "Fixed speed", choice = "Variable speed 20 coeff",choice = "Variable speed 30 coeff"));
   parameter Real minF( unit = "Hz") "minimum compressor frequency";
-
 
  //------------------Temperatures-----------------------------------------------------------------------------------------------------------------------------------------------------------------
   Real Tcond_c( unit = "degC") "Condensing temperature in °C";
@@ -129,14 +132,10 @@ model CMP_reversible_vs_1 "Reversible compressor model"
                                     Tcond_c^3*CMP_f^2}
                                      "30 coefficients polynomial equation";
 
-
   // =================EQUATION BLOCK===============================================================================================================================================================
 
-
-public
-
-
  //------------------Temperature calculation -----------------------------------------------------------------------------------------------------------------------------------------------------
+
 equation
   if HP_operative_status == 1 then
      Tcond_c = Tref_1 - 273.15;
@@ -153,8 +152,8 @@ equation
      HC = CC + Wel;
   else
     if CMP_type == "Fixed speed" then
-      Wel = Buildings.Utilities.Math.Functions.smoothMax(el_coef * t_vector_fix,0,1e-5);
-      CC = Buildings.Utilities.Math.Functions.smoothMax(cc_coef * t_vector_fix,0,1e-5);
+      Wel = Buildings.Utilities.Math.Functions.smoothMax(el_coef * t_vector_fix,0,1e-5)* abs(MultiplierW);
+      CC = Buildings.Utilities.Math.Functions.smoothMax(cc_coef * t_vector_fix,0,1e-5)* abs(MultiplierCC);
       HC = CC + Wel;
 
     elseif CMP_type == "Variable speed 20 coeff" then
@@ -184,4 +183,4 @@ equation
       Interval=59.9999616,
       Tolerance=1e-05,
       __Dymola_Algorithm="Radau"));
-end CMP_reversible_vs_1;
+end CMP_reversible_vs_1_RSE;

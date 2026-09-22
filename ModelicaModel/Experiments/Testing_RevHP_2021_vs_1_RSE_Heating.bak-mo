@@ -1,32 +1,47 @@
 within HeatPumpModel.Experiments;
-model HP_Test_vs_12_BSA_Heating "Test with HP RSE NAW 006 Heatin Mode"
-  Components.Heating.HeatPump_vs_11_test_clean
-                                         heatPump_vs_11_test_clean(
+model Testing_RevHP_2021_vs_1_RSE_Heating "Test with HP RSE NAW 006 Heatin Mode"
+  Components.ReversibleHP.Reversible_HP_vs_3_RSE
+                                         reversible_HP_vs_3_RSE(
     redeclare package Medium = ExternalMedia.Media.CoolPropMedium (mediumName="R410A", substanceNames={"R410A"}) "R410A",
-    redeclare package cond_medium = Buildings.Media.Antifreeze.PropyleneGlycolWater (property_T=293.15, X_a=0.3),
-    m_flow_cond_nominal=0.36,
-    dp_cond_nominal=0,
-    redeclare package eva_medium = Buildings.Media.Air,
-    UA_nom_cond=1690,
-    m_flow_eva_nominal=2.82,
-    dp_eva_nominal=0,
+    redeclare package HE1_medium =Buildings.Media.Antifreeze.PropyleneGlycolWater(property_T = 293.15, X_a = 0.3),
+    redeclare package HE2_medium = Buildings.Media.Air,
     fileName="C:/Users/benafra10167/Desktop/CMP_polynomial/Variable_Speed_Copeland/XHV0181P-9E9-ED3015A polynomials.xlsx",
     SH=11,
-    f_nominal = 60,
     SBC=3,
     F=1,
     CMP_type="Variable speed 20 coeff",
-    UA_nom_eva=400,
-    fileName_cond="C:/Users/benafra10167/Desktop/HE_polynomial/B16.xlsx",
-    m_ref_nom=0.033,
-    Tau_cost_cond(displayUnit="s") = 1e-2,
-    Tau_cost_eva(displayUnit="s") = 1e-2,
-    UA_value_cond="Parametric correlation",
-    UA_value_eva="Parametric correlation",
-    V_eva(displayUnit="l") = 0.5,
-    V_cond(displayUnit="l") = 0.00156,
-    PP_eva=2,
-    PP_cond=2) "Variable speed HP with PID and refrigerant cycle" annotation (Placement(transformation(extent={{12,-26},{50,12}})));
+    minF=15,
+    scale_cc=1,
+    scale_w=1,
+    eps_cc=0,
+    eps_w=0,
+    m_flow_nominal=0.36,
+    m_flow_HE1_nominal_heat=0.36,
+    m_flow_HE1_nominal_cool=0.29,
+    m_ref_nom_heat=0.033,
+    m_ref_nom_cool=0.033,
+    dp_HE1_nominal=0,
+    PP_HE1=2,
+    K_UA=1,
+    UA_nom_heat_HE1=1690,
+    UA_nom_cool_HE1=810,
+    V_HE1(displayUnit="l") = 0.00156,
+    Tau_cost_HE1(displayUnit="s") = 1,
+    UA_value_HE1="Nominal value",
+    fileName_HE1_heat="C:/Users/benafra10167/Desktop/HE_polynomial/B16.xlsx",
+    fileName_HE1_cool="C:/Users/benafra10167/Desktop/HE_polynomial/B16_cooling.xlsx",
+    m_flow_HE2_nominal=2.82,
+    m_flow_HE2_nominal_heat=2.82,
+    m_flow_HE2_nominal_cool=2.82,
+    dp_HE2_nominal=0,
+    K_UA_HE2=0.425,
+    PP_HE2=2,
+    UA_nom_heat_HE2=400,
+    UA_nom_cool_HE2=1030,
+    V_HE2(displayUnit="l") = 0.5,
+    Tau_cost_HE2(displayUnit="s") = 1,
+    UA_value_HE2="Nominal value")
+               "Variable speed HP with PID and refrigerant cycle" annotation (Placement(transformation(extent={{12,-26},{50,12}})));
   Modelica.Fluid.Sources.MassFlowSource_T Source(
     redeclare package Medium = Buildings.Media.Air,
     use_m_flow_in=true,
@@ -9973,16 +9988,15 @@ model HP_Test_vs_12_BSA_Heating "Test with HP RSE NAW 006 Heatin Mode"
   Modelica.Blocks.Sources.RealExpression mass_flow_fan(y=scalar(FanRequest.y)*2.82/100)
     annotation (Placement(transformation(extent={{-50,-38},{-30,-18}})));
 equation
-  connect(Source.ports[1], heatPump_vs_11_test_clean.Source_in) annotation (Line(points={{6,-38},{10.1,-38},{10.1,-20.3}}, color={0,127,255}));
-  connect(heatPump_vs_11_test_clean.Load_in, T_return.port) annotation (Line(points={{10.1,6.68},{10.1,12},{17,12}},color={0,127,255}));
-  connect(boundary_source.ports[1], heatPump_vs_11_test_clean.Source_out) annotation (Line(points={{70,-38},{70,-34},{51.9,-34},{51.9,-20.68}},
-                                                                                                                                      color={0,127,255}));
+  connect(Source.ports[1], reversible_HP_vs_3_RSE.Source_in) annotation (Line(points={{6,-38},{10.1,-38},{10.1,-20.3}}, color={0,127,255}));
+  connect(reversible_HP_vs_3_RSE.Load_in, T_return.port) annotation (Line(points={{10.1,6.68},{10.1,12},{17,12}}, color={0,127,255}));
+  connect(boundary_source.ports[1], reversible_HP_vs_3_RSE.Source_out) annotation (Line(points={{70,-38},{70,-34},{51.9,-34},{51.9,-20.68}}, color={0,127,255}));
   connect(T_ext.y, Source.T_in)
     annotation (Line(points={{-29,-44},{-24,-44},{-24,-34},{-16,-34}},
                                                    color={0,0,127}));
-  connect(T_supply.port, heatPump_vs_11_test_clean.Load_out) annotation (Line(points={{48,12},{48,6.3},{51.9,6.3}},  color={0,127,255}));
-  connect(CMP_f.y, heatPump_vs_11_test_clean.CMP_f1) annotation (Line(points={{1,-8},{8,-8},{8,-6.24},{11.24,-6.24}},color={0,0,127}));
-  connect(Load.ports[1], heatPump_vs_11_test_clean.Load_in) annotation (Line(points={{-4,24},{8,24},{8,6.68},{10.1,6.68}},color={0,127,255}));
+  connect(T_supply.port, reversible_HP_vs_3_RSE.Load_out) annotation (Line(points={{48,12},{48,7.06},{51.9,7.06}}, color={0,127,255}));
+  connect(CMP_f.y, reversible_HP_vs_3_RSE.CMP_f1) annotation (Line(points={{1,-8},{8,-8},{8,-7.57},{8.77,-7.57}}, color={0,0,127}));
+  connect(Load.ports[1], reversible_HP_vs_3_RSE.Load_in) annotation (Line(points={{-4,24},{8,24},{8,6.68},{10.1,6.68}}, color={0,127,255}));
   connect(mass_flow.y, Load.m_flow_in)
     annotation (Line(points={{-31.2,40},{-24,40},{-24,32}}, color={0,0,127}));
   connect(load_ent_t.y, Load.T_in)
@@ -9990,12 +10004,13 @@ equation
                                                    color={0,0,127}));
   connect(mass_flow_fan.y, Source.m_flow_in)
     annotation (Line(points={{-29,-28},{-29,-30},{-14,-30}}, color={0,0,127}));
-  connect(heatPump_vs_11_test_clean.Load_out, boundary_load.ports[1]) annotation (Line(points={{51.9,6.3},{72,6.3},{72,12}},  color={0,127,255}));
+  connect(reversible_HP_vs_3_RSE.Load_out, boundary_load.ports[1]) annotation (Line(points={{51.9,7.06},{72,7.06},{72,12}}, color={0,127,255}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
         coordinateSystem(preserveAspectRatio=false)),
     experiment(
+      StartTime=172740,
       StopTime=604380,
       Interval=60,
       Tolerance=1e-05,
       __Dymola_Algorithm="Radau"));
-end HP_Test_vs_12_BSA_Heating;
+end Testing_RevHP_2021_vs_1_RSE_Heating;
