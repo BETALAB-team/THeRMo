@@ -10,7 +10,8 @@ model Control_vs_3 "Control System for reversible components"
     Ti=Ti_heat,
     Td=Td_heating,
     reset=Buildings.Types.Reset.Parameter,
-    y_reset=0) annotation (Placement(transformation(extent={{-20,20},{0,40}})));
+    y_reset=0)
+      annotation (Placement(transformation(extent={{-20,20},{0,40}})));
   Buildings.Controls.Continuous.LimPID conPID_Cool(
     u_s=Tset,
     controllerType=Modelica.Blocks.Types.SimpleController.PID,
@@ -45,6 +46,7 @@ model Control_vs_3 "Control System for reversible components"
   parameter Real f_nominal(unit="Hz") "nominal compressor frequency" annotation (Dialog(group="Setup"));
   parameter Real Tdelay( unit = "s") "delay when HP turns ON"
                                                              annotation (Dialog(group="Setup"));
+
 
  // =================EQUATION BLOCK===============================================================================================================================================================
 
@@ -113,7 +115,7 @@ equation
           lineThickness=1)}),                                                                                                                                              Diagram(coordinateSystem(
           preserveAspectRatio=false)),
     experiment(
-      StopTime=10800,
+      StopTime=15000,
       Interval=60,
       __Dymola_Algorithm="Radau"));
 end Control_vs_3;

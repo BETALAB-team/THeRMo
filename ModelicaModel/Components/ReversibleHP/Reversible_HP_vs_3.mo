@@ -10,7 +10,8 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
     redeclare package Medium = Medium,
     F=F,
     PP_eva=PP_HE2,
-    PP_cond=PP_HE1) annotation (Placement(transformation(extent={{26,-16},{60,18}})));
+    PP_cond=PP_HE1,
+    f_el = f_el) annotation (Placement(transformation(extent={{28,-16},{62,18}})));
   PlateHE_vs_1 PHE(
     redeclare package Medium = HE1_medium,
     m_flow_nominal = m_flow_nominal,
@@ -25,32 +26,36 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
     fileNameH = fileName_HE1_heat,
     fileNameC = fileName_HE1_cool,
     V=V_HE1,
-    Tau_cost_PHE = Tau_cost_HE1) annotation (Placement(transformation(extent={{28,58},{58,88}})));
+    Tau_cost_PHE = Tau_cost_HE1,
+    K_UA = K_UA) annotation (Placement(transformation(extent={{28,58},{58,88}})));
   FinCoil_vs_2 FinCoil(
     redeclare package Medium = HE2_medium,
     m_flow_nominal=m_flow_HE2_nominal,
     m_f_nom_heat=m_flow_HE2_nominal_heat,
     m_f_nom_cool=m_flow_HE2_nominal_cool,
     dp_nominal=dp_HE2_nominal,
-    UA_value_FC = UA_value_HE2,
-    UA_nom_heat = UA_nom_heat_HE2,
-    UA_nom_cool = UA_nom_cool_HE2,
+    UA_value_FC=UA_value_HE2,
+    UA_nom_heat=UA_nom_heat_HE2,
+    UA_nom_cool=UA_nom_cool_HE2,
     V=V_HE2,
-    Tau_cost_FC = Tau_cost_HE2) annotation (Placement(transformation(extent={{34,-56},{64,-86}})));
+    Tau_cost_FC=Tau_cost_HE2,
+    K_UA=K_UA_HE2,
+    k_ice = k_ice)
+                  annotation (Placement(transformation(extent={{36,-58},{66,-88}})));
 
-  Control_vs_3 control_vs_3(Tset=Tset,
-    DeltaTup=DeltaTup,
-    DeltaTlow=DeltaTlow,
+  Control_vs_4 control_vs_4_1(Operation_Mode = Operation_Mode,
+                            Tset=Tset,
     controllerType_heat=controllerType_heat,
     k_heat=k_heat,
     Ti_heat=Ti_heat,
     Td_heating=Td_heating,
-    controllerType_cool=controllerType_cool,
-    k_cool=k_cool,
-    Ti_cool=Ti_cool,
-    Td_cool=Td_cool,
     f_nominal=f_nominal,
-    Tdelay = Tdelay) annotation (Placement(transformation(extent={{-94,-10},{-74,10}})));
+    Tdelay = Tdelay,
+    fmin_Low = fmin_Low,
+    fmin_High = fmin_High,
+    reverseActing=reverseActing,
+    p_def = p_def)
+      annotation (Placement(transformation(extent={{-86,-10},{-66,10}})));
 
   CMP_reversible_vs_1 CMP_reversible(
     fileName=fileName,
@@ -58,7 +63,6 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
     minF=minF) annotation (Placement(transformation(extent={{-50,-12},{-24,14}})));
   Modelica.Fluid.Sensors.Temperature TsourceIn(redeclare package Medium = HE2_medium) annotation (Placement(transformation(extent={{0,-54},{20,-34}})));
   Modelica.Fluid.Sensors.Temperature TloadIn(redeclare package Medium = HE1_medium) annotation (Placement(transformation(extent={{-2,32},{18,52}})));
-
   Modelica.Fluid.Sensors.TemperatureTwoPort TsourceOut( redeclare package Medium = HE2_medium) annotation (Placement(transformation(extent={{72,-62},{92,-82}})));
   Modelica.Fluid.Sensors.TemperatureTwoPort TloadOut( redeclare package Medium = HE1_medium) annotation (Placement(transformation(extent={{76,64},{96,84}})));
 
@@ -80,8 +84,9 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
             {120,10}})));
   Modelica.Blocks.Interfaces.RealOutput Efficency "Coefficient of performance" annotation (Placement(transformation(extent={{100,-50},{120,-30}}),iconTransformation(extent={{100,-50},{120,-30}})));
   Modelica.Blocks.Math.Division division annotation (Placement(transformation(extent={{80,34},{94,48}})));
-  Modelica.Blocks.Interfaces.RealOutput Efficency_System "System_Efficency" annotation (Placement(transformation(extent={{106,32},{126,52}}), iconTransformation(extent={{100,30},{120,50}})));
-   Modelica.Blocks.Interfaces.RealInput Tmeas1 annotation (Placement(transformation(extent={{-132,-8},{-116,8}}), iconTransformation(extent={{-132,-8},{-116,8}})));
+  Modelica.Blocks.Interfaces.RealOutput COP_System "System_Efficency" annotation (Placement(transformation(extent={{106,32},{126,52}}), iconTransformation(extent={{100,30},{120,50}})));
+  Modelica.Blocks.Interfaces.RealInput Tmeas1 annotation (Placement(transformation(extent={{-132,-8},{-116,8}}), iconTransformation(extent={{-132,-8},{-116,8}})));
+  Modelica.Blocks.Sources.RealExpression realExpression(y=Output.Peva) annotation (Placement(transformation(extent={{-76,-28},{-92,-14}})));
   //---------------Medium Replaceble Packages-----------------------------------------------------------------------------------------------------------------------------------------------------
 
   replaceable package Medium = ExternalMedia.Media.CoolPropMedium (mediumName="R410a", substanceNames={"R410a"}) annotation (choices(
@@ -108,6 +113,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
       choice="Variable speed 20 coeff",
       choice="Variable speed 30 coeff"), Dialog(group="CMP"));
   parameter Real minF( unit = "Hz") "minimum compressor frequency" annotation (Dialog(group="CMP"));
+  parameter Real f_el "electrical heat losses through compressor envelope" annotation (Dialog(group="CMP"));
 
   //-------------Input Parameters HE1--------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -118,6 +124,7 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
   parameter Real m_ref_nom_cool(unit="kg/s") "Nominal refrigerant mass flow rate [kg/s] cooling" annotation (Dialog(group="HE1"));
   parameter Modelica.Units.SI.PressureDifference dp_HE1_nominal "Pressure difference" annotation (Dialog(group="HE1"));
   parameter Real PP_HE1(unit="K") = 2 "Condenser pinch point" annotation (Dialog(group="HE1"));
+  parameter Real K_UA "Optimization parameter" annotation (Dialog(group="HE1"));
   parameter Real UA_nom_heat_HE1(unit="W/K") "Nominal UA value" annotation (Dialog(group="HE1"));
   parameter Real UA_nom_cool_HE1(unit="W/K") "Nominal UA value" annotation (Dialog(group="HE1"));
   parameter Modelica.Units.SI.Volume V_HE1 "Volume" annotation (Dialog(group="HE1"));
@@ -138,33 +145,28 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
   parameter Modelica.Units.SI.MassFlowRate m_flow_HE2_nominal_cool "Nominal mass flow rate cooling" annotation (Dialog(group="HE2"));
   parameter Modelica.Units.SI.PressureDifference dp_HE2_nominal "Pressure difference" annotation (Dialog(group="HE2"));
   parameter Real PP_HE2(unit="K")  "Evaporator pinch point" annotation (Dialog(group="HE2"));
+  parameter Real K_UA_HE2 "Optimization parameter" annotation (Dialog(group="HE2"));
   parameter Real UA_nom_heat_HE2(unit="W/K") "Heat transfer/ area product" annotation (Dialog(group="HE2"));
   parameter Real UA_nom_cool_HE2(unit="W/K") "Nominal UA value" annotation (Dialog(group="HE2"));
   parameter Modelica.Units.SI.Volume V_HE2 "Volume" annotation (Dialog(group="HE2"));
   parameter Modelica.Units.SI.Time Tau_cost_HE2(displayUnit="min") "Time Constant of Eva Filter" annotation (Dialog(group="HE2"));
   parameter String UA_value_HE2="Select how to calculate UA" annotation (choices(choice="Nominal value", choice="Parametric correlation"), Dialog(group="HE2"));
-
+  parameter Real k_ice = 1 "scaling factor for ice formation" annotation (Dialog(group="HE2"));
 
   //------------------------------------Control parameters ----------------------------------------------------------------------------------------------------------------------------------------
-  parameter String HP_main_operation="Select the main HP operation mode"  annotation (choices(
-      choice="Heating Mode",
-      choice="Cooling Mode"), Dialog(group="Control"));
-  parameter Real Tset( unit = "K")
-                                  "set point temperature" annotation (Dialog(group="Control"));
-  parameter Real DeltaTup( unit = "K") "upper temperature dead band" annotation (Dialog(group="Control"));
-  parameter Real DeltaTlow( unit = "K") "lower temperature dead band" annotation (Dialog(group="Control"));
+  parameter String Operation_Mode =  "Select an operation mode" annotation (choices(choice = "Heating Mode",choice = "Cooling Mode"), Dialog(group = "Control"));
+  parameter Boolean reverseActing=true "Set to true for reverse acting, or false for direct acting control action" annotation (Dialog(group="Control"));
+  parameter Real Tset( unit = "K") "set point temperature" annotation (Dialog(group="Control"));
   parameter Modelica.Blocks.Types.SimpleController controllerType_heat=Modelica.Blocks.Types.SimpleController.PI "Type of controller" annotation (Dialog(group="Control"));
   parameter Real k_heat=1 "Gain of controller" annotation (Dialog(group="Control"));
   parameter Modelica.Units.SI.Time Ti_heat=0.5 "Time constant of Integrator block" annotation (Dialog(group="Control"));
   parameter Modelica.Units.SI.Time Td_heating=0.1 "Time constant of Derivative block" annotation (Dialog(group="Control"));
-  parameter Modelica.Blocks.Types.SimpleController controllerType_cool=Modelica.Blocks.Types.SimpleController.PI "Type of controller" annotation (Dialog(group="Control"));
-  parameter Real k_cool=1 "Gain of controller" annotation (Dialog(group="Control"));
-  parameter Modelica.Units.SI.Time Ti_cool=0.5 "Time constant of Integrator block" annotation (Dialog(group="Control"));
-  parameter Modelica.Units.SI.Time Td_cool=0.1 "Time constant of Derivative block" annotation (Dialog(group="Control"));
-  parameter Real f_nominal( unit = "Hz")
-                                        "nominal compressor frequency" annotation (Dialog(group="CMP"));
+  parameter Real f_nominal( unit = "Hz")  "nominal compressor frequency" annotation (Dialog(group="CMP"));
   parameter Real Tdelay( unit = "s") "time dealy of compressor turning ON"
                                                                           annotation (Dialog(group="Control"));
+  parameter Real fmin_Low( unit = "Hz") "minimum freqeuncy lower deadband" annotation (Dialog(group="Control"));
+  parameter Real fmin_High( unit = "Hz") "maximum freqeuncy lower deadband" annotation(Dialog(group="Control"));
+  parameter Real p_def( unit = "bar") "evaporeating pressure at which defrost starts" annotation (Dialog(group = "Control"));
 
   record box
     Modelica.Units.SI.Pressure Pcond "Total condensing pressure";
@@ -187,7 +189,10 @@ model Reversible_HP_vs_3 "Reversible HP with one single thermodynamic cycle and 
 
   box Output;
 
+
 equation
+
+  assert(Output.Tcond >= Output.Teva,"The condensing temperature must be always greater than the evaporation temperature! Check the simulation inputs!");
 
    Output.Pcond = ref_cycle_reversible_vs_1_1.Pcond;
    Output.Peva = ref_cycle_reversible_vs_1_1.Peva;
@@ -201,52 +206,51 @@ equation
    Output.HC = ref_cycle_reversible_vs_1_1.HC_ref;
    Output.HeatLoad = PHE.Pow_sec;
    Output.CC = ref_cycle_reversible_vs_1_1.CC_ref;
-   Output.CMP_f = control_vs_3.CMP_f;
-   Output.HP_mode =control_vs_3.HP_operative_mode;
-   Output.HP_target =control_vs_3.HP_target;
-
-
+   Output.CMP_f = control_vs_4_1.CMP_f;
+   Output.HP_mode = control_vs_4_1.HP_operative_mode;
+   Output.HP_target = control_vs_4_1.HP_target;
 
   connect(Load_in, Load_in) annotation (Line(points={{-110,72},{-110,72}}, color={0,127,255}));
   connect(Source_out, Source_out) annotation (Line(points={{110,-72},{110,-72}}, color={0,127,255}));
   connect(Load_out, Load_out) annotation (Line(points={{110,74},{110,74}}, color={0,127,255}));
-  connect(ref_cycle_reversible_vs_1_1.Wel_ref, Wel_ref) annotation (Line(points={{63.91,12.73},{102,12.73},{102,0},{110,0}}, color={0,0,127}));
+  connect(ref_cycle_reversible_vs_1_1.Wel_ref, Wel_ref) annotation (Line(points={{65.91,12.73},{102,12.73},{102,0},{110,0}}, color={0,0,127}));
 
-  connect(FinCoil.port_a, Source_in) annotation (Line(points={{34,-71},{34,-72},{-110,-72},{-110,-70}}, color={0,127,255}));
+  connect(FinCoil.port_a, Source_in) annotation (Line(points={{36,-73},{36,-72},{-110,-72},{-110,-70}}, color={0,127,255}));
   connect(Efficency, Efficency) annotation (Line(points={{110,-40},{110,-40}}, color={0,0,127}));
   connect(PHE.Pow_secondary, division.u1) annotation (Line(points={{59.5,66.7},{72,66.7},{72,45.2},{78.6,45.2}}, color={0,0,127}));
-  connect(ref_cycle_reversible_vs_1_1.Wel_ref, division.u2) annotation (Line(points={{63.91,12.73},{72,12.73},{72,36.8},{78.6,36.8}},
+  connect(ref_cycle_reversible_vs_1_1.Wel_ref, division.u2) annotation (Line(points={{65.91,12.73},{72,12.73},{72,36.8},{78.6,36.8}},
                                                                                                                                     color={0,0,127}));
-  connect(division.y, Efficency_System) annotation (Line(points={{94.7,41},{96,42},{116,42}}, color={0,0,127}));
-  connect(FinCoil.port_a, TsourceIn.port) annotation (Line(points={{34,-71},{34,-72},{18,-72},{18,-54},{10,-54}}, color={0,127,255}));
-  connect(TsourceIn.T, ref_cycle_reversible_vs_1_1.SET) annotation (Line(points={{17,-44},{23.96,-44},{23.96,-14.3}}, color={0,0,127}));
-  connect(TloadIn.T, ref_cycle_reversible_vs_1_1.LET) annotation (Line(points={{15,42},{24,42},{24,18},{23.96,18},{23.96,16.3}}, color={0,0,127}));
-  connect(PHE.port_a, TloadIn.port) annotation (Line(points={{28,73},{-2,73},{-2,32},{8,32}}, color={0,127,255}));
-  connect(CMP_reversible.CC_Wel, ref_cycle_reversible_vs_1_1.CC_Wel) annotation (Line(points={{-22.31,-1.73},{24,-1.73},{24,-2},{24.13,-2},{24.13,-2.57}},
+  connect(division.y, COP_System) annotation (Line(points={{94.7,41},{96,42},{116,42}}, color={0,0,127}));
+  connect(TsourceIn.T, ref_cycle_reversible_vs_1_1.SET) annotation (Line(points={{17,-44},{25.96,-44},{25.96,-14.3}}, color={0,0,127}));
+  connect(TloadIn.T, ref_cycle_reversible_vs_1_1.LET) annotation (Line(points={{15,42},{24,42},{24,18},{25.96,18},{25.96,16.3}}, color={0,0,127}));
+  connect(PHE.port_a, TloadIn.port) annotation (Line(points={{28,73},{0,73},{0,32},{8,32}},   color={0,127,255}));
+  connect(CMP_reversible.CC_Wel, ref_cycle_reversible_vs_1_1.CC_Wel) annotation (Line(points={{-22.31,-1.73},{24,-1.73},{24,-2},{26.13,-2},{26.13,-2.57}},
                                                                                                                                                    color={0,0,127}));
-  connect(CMP_reversible.HP_operative_status_out, ref_cycle_reversible_vs_1_1.HP_operatve_status) annotation (Line(points={{-22.31,3.47},{24,3.47},{24,4.4},{23.96,4.4}},
+  connect(CMP_reversible.HP_operative_status_out, ref_cycle_reversible_vs_1_1.HP_operatve_status) annotation (Line(points={{-22.31,3.47},{24,3.47},{24,4.4},{25.96,4.4}},
                                                                                                                                                                  color={255,127,0}));
-  connect(ref_cycle_reversible_vs_1_1.HP_efficency, Efficency) annotation (Line(points={{63.91,-10.05},{63.91,-40},{110,-40}},
+  connect(ref_cycle_reversible_vs_1_1.HP_efficency, Efficency) annotation (Line(points={{65.91,-10.05},{65.91,-40},{110,-40}},
                                                                                                                             color={0,0,127}));
-  connect(ref_cycle_reversible_vs_1_1.HE1_output, PHE.HE_input) annotation (Line(points={{43.17,20.21},{43,20.21},{43,56.2}},
+  connect(ref_cycle_reversible_vs_1_1.HE1_output, PHE.HE_input) annotation (Line(points={{45.17,20.21},{43,20.21},{43,56.2}},
                                                                                                                            color={0,0,127}));
   connect(PHE.RefT_filter, CMP_reversible.Tref_1) annotation (Line(points={{26.5,67},{26.5,66},{-37,66},{-37,15.82}}, color={0,0,127}));
-  connect(FinCoil.RefT, CMP_reversible.Tref_2) annotation (Line(points={{32.5,-63.5},{-36.87,-63.5},{-36.87,-13.69}}, color={0,0,127}));
-  connect(ref_cycle_reversible_vs_1_1.HE2_output, FinCoil.HE_input) annotation (Line(points={{43,-18.38},{43.75,-26},{43.75,-54.35}}, color={0,0,127}));
-  connect(ref_cycle_reversible_vs_1_1.T_ref_1, PHE.RefT_filter) annotation (Line(points={{23.96,11.2},{-20,11.2},{-20,66},{26.5,66},{26.5,67}},
+  connect(ref_cycle_reversible_vs_1_1.T_ref_1, PHE.RefT_filter) annotation (Line(points={{25.96,11.2},{-20,11.2},{-20,66},{26.5,66},{26.5,67}},
                                                                                                                                               color={0,0,127}));
-  connect(ref_cycle_reversible_vs_1_1.T_ref_2, FinCoil.RefT) annotation (Line(points={{23.96,-9.2},{22,-9.2},{22,-10},{-20,-10},{-20,-63.5},{32.5,-63.5}},
-                                                                                                                                         color={0,0,127}));
-  connect(control_vs_3.HP_operative_status, CMP_reversible.HP_operative_status) annotation (Line(points={{-73,2},{-51.69,2},{-51.69,3.47}},                 color={255,127,0}));
-  connect(control_vs_3.CMP_f, CMP_reversible.CMP_f) annotation (Line(points={{-73,-2.2},{-73,-1.73},{-51.69,-1.73}}, color={0,0,127}));
-  connect(control_vs_3.Tmeas, Tmeas1) annotation (Line(points={{-94.8,0},{-124,0}}, color={0,0,127}));
-  connect(control_vs_3.HP_operative_status, PHE.HP_operative_status) annotation (Line(points={{-73,2},{-68,2},{-68,84.85},{26.35,84.85}}, color={255,127,0}));
-  connect(control_vs_3.HP_operative_status, FinCoil.HP_operative_status) annotation (Line(points={{-73,2},{-68,2},{-68,-82.85},{32.35,-82.85}}, color={255,127,0}));
-  connect(Load_in, PHE.port_a) annotation (Line(points={{-110,72},{-2,72},{-2,73},{28,73}}, color={0,127,255}));
+  connect(ref_cycle_reversible_vs_1_1.T_ref_2, FinCoil.RefT) annotation (Line(points={{25.96,-9.2},{-20,-9.2},{-20,-65.5},{34.5,-65.5}}, color={0,0,127}));
+  connect(control_vs_4_1.HP_operative_status, CMP_reversible.HP_operative_status) annotation (Line(points={{-65,2},{-51.69,2},{-51.69,3.47}}, color={255,127,0}));
+  connect(control_vs_4_1.CMP_f, CMP_reversible.CMP_f) annotation (Line(points={{-65,-2.2},{-65,-1.73},{-51.69,-1.73}}, color={0,0,127}));
+  connect(control_vs_4_1.Tmeas, Tmeas1) annotation (Line(points={{-86.8,0},{-124,0}}, color={0,0,127}));
+  connect(control_vs_4_1.HP_operative_status, PHE.HP_operative_status) annotation (Line(points={{-65,2},{-62,2},{-62,84.85},{26.35,84.85}}, color={255,127,0}));
   connect(PHE.port_b, TloadOut.port_a) annotation (Line(points={{58,73},{60,74},{76,74}}, color={0,127,255}));
   connect(TloadOut.port_b, Load_out) annotation (Line(points={{96,74},{110,74}}, color={0,127,255}));
-  connect(FinCoil.port_b, TsourceOut.port_a) annotation (Line(points={{64,-71},{64,-72},{72,-72}}, color={0,127,255}));
+  connect(FinCoil.port_b, TsourceOut.port_a) annotation (Line(points={{66,-73},{66,-72},{72,-72}}, color={0,127,255}));
   connect(TsourceOut.port_b, Source_out) annotation (Line(points={{92,-72},{110,-72}}, color={0,127,255}));
+
+  connect(ref_cycle_reversible_vs_1_1.HE2_output, FinCoil.HE_input) annotation (Line(points={{45,-18.38},{45,-52},{45.75,-52},{45.75,-56.35}}, color={0,0,127}));
+  connect(FinCoil.RefT, CMP_reversible.Tref_2) annotation (Line(points={{34.5,-65.5},{-6,-65.5},{-6,-66},{-36.87,-66},{-36.87,-13.69}}, color={0,0,127}));
+  connect(TsourceIn.port, FinCoil.port_a) annotation (Line(points={{10,-54},{10,-72},{36,-72},{36,-73}}, color={0,127,255}));
+  connect(PHE.port_a, Load_in) annotation (Line(points={{28,73},{-110,73},{-110,72}}, color={0,127,255}));
+  connect(FinCoil.HP_operative_status, control_vs_4_1.HP_operative_status) annotation (Line(points={{34.35,-84.85},{34.35,-86},{-62,-86},{-62,2},{-65,2}}, color={255,127,0}));
+  connect(realExpression.y, control_vs_4_1.p_eva) annotation (Line(points={{-92.8,-21},{-92.8,-6},{-86.8,-6}}, color={0,0,127}));
   annotation (Icon(graphics={
         Rectangle(
           extent={{-80,80},{80,-80}},
