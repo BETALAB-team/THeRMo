@@ -3,43 +3,43 @@ model Reversible_HP_vs_3_RSE "Model used for RSE validation"
 
    //---------------Components---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  Ref_cycle_reversible_vs_1 ref_cycle_reversible_vs_1_1(
+  RefCycle.Ref_cycle_reversible_vs_1 ref_cycle_reversible_vs_1_1(
     fileName=fileName,
     SH=SH,
     SBC=SBC,
     redeclare package Medium = Medium,
     F=F,
-    f_el = f_el,
+    f_el=f_el,
     PP_eva=PP_HE2,
     PP_cond=PP_HE1) annotation (Placement(transformation(extent={{26,-16},{60,18}})));
-  PlateHE_vs_1 PHE(
+  HeatExchangers.PlateHE_vs_1 PHE(
     redeclare package Medium = HE1_medium,
-    m_flow_nominal = m_flow_nominal,
+    m_flow_nominal=m_flow_nominal,
     m_f_nom_heat=m_flow_HE1_nominal_heat,
     m_f_nom_cool=m_flow_HE1_nominal_cool,
     dp_nominal=dp_HE1_nominal,
-    m_ref_nom_cool =m_ref_nom_cool,
-    m_ref_nom_heat =m_ref_nom_heat,
-    UA_value_PHE = UA_value_HE1,
+    m_ref_nom_cool=m_ref_nom_cool,
+    m_ref_nom_heat=m_ref_nom_heat,
+    UA_value_PHE=UA_value_HE1,
     UA_nom_heat=UA_nom_heat_HE1,
     UA_nom_cool=UA_nom_cool_HE1,
-    fileNameH = fileName_HE1_heat,
-    fileNameC = fileName_HE1_cool,
+    fileNameH=fileName_HE1_heat,
+    fileNameC=fileName_HE1_cool,
     V=V_HE1,
-    Tau_cost_PHE = Tau_cost_HE1,
-    K_UA = K_UA) annotation (Placement(transformation(extent={{28,58},{58,88}})));
-  FinCoil_vs_1 FinCoil(
+    Tau_cost_PHE=Tau_cost_HE1,
+    K_UA=K_UA) annotation (Placement(transformation(extent={{28,58},{58,88}})));
+  HeatExchangers.FinCoil_vs_1 FinCoil(
     redeclare package Medium = HE2_medium,
     m_flow_nominal=m_flow_HE2_nominal,
     m_f_nom_heat=m_flow_HE2_nominal_heat,
     m_f_nom_cool=m_flow_HE2_nominal_cool,
     dp_nominal=dp_HE2_nominal,
-    UA_value_FC = UA_value_HE2,
-    UA_nom_heat = UA_nom_heat_HE2,
-    UA_nom_cool = UA_nom_cool_HE2,
+    UA_value_FC=UA_value_HE2,
+    UA_nom_heat=UA_nom_heat_HE2,
+    UA_nom_cool=UA_nom_cool_HE2,
     V=V_HE2,
-    Tau_cost_FC = Tau_cost_HE2,
-    K_UA = K_UA_HE2) annotation (Placement(transformation(extent={{34,-56},{64,-86}})));
+    Tau_cost_FC=Tau_cost_HE2,
+    K_UA=K_UA_HE2) annotation (Placement(transformation(extent={{34,-56},{64,-86}})));
 
   RSE_components.CMP_reversible_vs_1_RSE CMP_reversible(
     fileName=fileName,

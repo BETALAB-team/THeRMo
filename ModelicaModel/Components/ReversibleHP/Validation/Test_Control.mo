@@ -1,6 +1,6 @@
 within HeatPumpModel.Components.ReversibleHP.Validation;
 model Test_Control
-  Control_vs_1 control_vs_1(
+  Control.Control_vs_1 control_vs_1(
     Tset=20,
     DeltaTup=5,
     DeltaTlow=-5,

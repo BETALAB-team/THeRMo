@@ -1,6 +1,6 @@
 within HeatPumpModel.Experiments;
 model Test_Simplified_RevHP_vs_1 "Test of the reversible heat pump of a simplified case study"
-  Components.ReversibleHP.ReversibleHP_vs_2 reversibleHP_vs_2(
+  Components.ReversibleHP.HeatPump.ReversibleHP_vs_2 reversibleHP_vs_2(
     redeclare package Medium = ExternalMedia.Media.CoolPropMedium (mediumName="R410A", substanceNames={"R410A"}) "R410A",
     redeclare package load_medium = Buildings.Media.Antifreeze.Validation.BaseClasses.PropyleneGlycolWater (property_T=293.15, X_a=0.3),
     redeclare package source_medium = Buildings.Media.Air,

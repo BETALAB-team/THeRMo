@@ -1,0 +1,5 @@
+within HeatPumpModel.Components.ReversibleHP.Compressor;
+package CMP_data "Repository of the compressor database"
+  //XHV0181P_9E9_ED3015A Copeland variable speed R410A
+  //VRJ028-K Danfoss variable speed R410A
+end CMP_data;
