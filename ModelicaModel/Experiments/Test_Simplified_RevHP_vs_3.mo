@@ -1,9 +1,9 @@
 within HeatPumpModel.Experiments;
 model Test_Simplified_RevHP_vs_3 "Only heating to test frost formation and calculation of condensate"
-  Components.ReversibleHP.HeatPump.Reversible_HP_vs_5 reversible_HP_vs_5_1(
+  Components.ReversibleHP.HeatPump.Reversible_HP_vs_6 reversible_HP_vs_6_1(
     redeclare package Medium = ExternalMedia.Media.CoolPropMedium (mediumName="R410A", substanceNames={"R410A"}) "R410A",
     redeclare package HE1_medium = Buildings.Media.Antifreeze.PropyleneGlycolWater (property_T=293.15, X_a=0.3),
-    redeclare package HE2_medium = Buildings.Media.Air,
+    redeclare package HE2_medium = Buildings.Media.Air "Air",
     SH=10,
     SBC=3,
     redeclare parameter HeatPumpModel.Components.ReversibleHP.Compressor.CMP_data.XHV0181P_9E9_ED3015A CMP "Copeland, R410a variable speed",
@@ -14,6 +14,7 @@ model Test_Simplified_RevHP_vs_3 "Only heating to test frost formation and calcu
     m_ref_nom_heat=0.033,
     m_ref_nom_cool=0.033,
     K_UA=1,
+    secType=HeatPumpModel.Components.ReversibleHP.HeatExchangers.Types.SecondaryType.AirWater,
     m_flow_HE2_nominal=0.9,
     m_flow_HE2_nominal_heat=0.9,
     m_flow_HE2_nominal_cool=0.9,
@@ -34,8 +35,10 @@ model Test_Simplified_RevHP_vs_3 "Only heating to test frost formation and calcu
     UA_nom_cool_HE2=430,
     V_HE2(displayUnit="l") = 0.018,
     Tau_cost_HE2(displayUnit="s") = 1,
-    UA_value_HE2="Parametric correlation",
+    UA_value_HE2="Nominal value",
     k_ice=1,
+    m_ref_nom_heat_HE2=1,
+    m_ref_nom_cool_HE2=1,
     Operation_Mode="Heating Mode",
     reverseActing=true,
     Tset(displayUnit="degC") = 303.15,
@@ -403,22 +406,22 @@ model Test_Simplified_RevHP_vs_3 "Only heating to test frost formation and calcu
 equation
   connect(mass_flow_fan.y,Source. m_flow_in)
     annotation (Line(points={{-67,-22},{-67,-24},{-52,-24}}, color={0,0,127}));
-  connect(reversible_HP_vs_5_1.Source_in, Source.ports[1]) annotation (Line(points={{-16.6,-15.1},{-26,-15.1},{-26,-32.25},{-32,-32.25}},
+  connect(reversible_HP_vs_6_1.Source_in, Source.ports[1]) annotation (Line(points={{-16.6,-15.1},{-26,-15.1},{-26,-32.25},{-32,-32.25}},
                                                                                                                                     color={0,127,255}));
-  connect(boundary_source.ports[1],reversible_HP_vs_5_1. Source_out) annotation (Line(points={{46,-32},{46,-15.56},{40.6,-15.56}}, color={0,127,255}));
-  connect(T_return.port,reversible_HP_vs_5_1. Load_in) annotation (Line(points={{-9,28},{-20,28},{-20,17.56},{-16.6,17.56}}, color={0,127,255}));
-  connect(pump.port_b,reversible_HP_vs_5_1. Load_in) annotation (Line(points={{-36,28},{-20,28},{-20,17.56},{-16.6,17.56}}, color={0,127,255}));
+  connect(boundary_source.ports[1],reversible_HP_vs_6_1. Source_out) annotation (Line(points={{46,-32},{46,-15.56},{40.6,-15.56}}, color={0,127,255}));
+  connect(T_return.port,reversible_HP_vs_6_1. Load_in) annotation (Line(points={{-9,28},{-20,28},{-20,17.56},{-16.6,17.56}}, color={0,127,255}));
+  connect(pump.port_b,reversible_HP_vs_6_1. Load_in) annotation (Line(points={{-36,28},{-20,28},{-20,17.56},{-16.6,17.56}}, color={0,127,255}));
   connect(boundary_load.ports[1], pump.port_a) annotation (Line(points={{-78,40},{-64,40},{-64,28},{-56,28}}, color={0,127,255}));
-  connect(reversible_HP_vs_5_1.Load_out, vol.ports[1]) annotation (Line(points={{40.6,18.02},{46,18.02},{46,50},{31,50}},
+  connect(reversible_HP_vs_6_1.Load_out, vol.ports[1]) annotation (Line(points={{40.6,18.02},{46,18.02},{46,50},{31,50}},
                                                                                                                         color={0,127,255}));
   connect(vol.ports[2], pump.port_a) annotation (Line(points={{33,50},{-64,50},{-64,28},{-56,28}}, color={0,127,255}));
   connect(prescribedHeatFlow.port, vol.heatPort)
     annotation (Line(points={{8,78},{16,78},{16,60},{22,60}},
                                                color={191,0,0}));
-  connect(reversible_HP_vs_5_1.Load_out, T_supply.port) annotation (Line(points={{40.6,18.02},{40.6,18},{55,18}},color={0,127,255}));
-  connect(T_control.y,reversible_HP_vs_5_1. Tmeas1) annotation (Line(points={{-39,0},{-28,0},{-28,1},{-20.24,1}}, color={0,0,127}));
+  connect(reversible_HP_vs_6_1.Load_out, T_supply.port) annotation (Line(points={{40.6,18.02},{40.6,18},{55,18}},color={0,127,255}));
+  connect(T_control.y,reversible_HP_vs_6_1. Tmeas1) annotation (Line(points={{-39,0},{-28,0},{-28,1},{-20.24,1}}, color={0,0,127}));
   connect(senMasFra.port, Source.ports[2]) annotation (Line(points={{-14,-42},{-14,-46},{-24,-46},{-24,-31.75},{-32,-31.75}}, color={0,127,255}));
-  connect(senMasFra1.port,reversible_HP_vs_5_1. Source_out) annotation (Line(points={{70,-28},{70,-32},{58,-32},{58,-15.56},{40.6,-15.56}}, color={0,127,255}));
+  connect(senMasFra1.port,reversible_HP_vs_6_1. Source_out) annotation (Line(points={{70,-28},{70,-32},{58,-32},{58,-15.56},{40.6,-15.56}}, color={0,127,255}));
   connect(mass_flow.y, prescribedHeatFlow.Q_flow) annotation (Line(points={{-17.2,78},{-8,78}}, color={0,0,127}));
   connect(mass_flow1.y, Source.T_in) annotation (Line(points={{-69.2,-58},{-64,-58},{-64,-28},{-54,-28}}, color={0,0,127}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(coordinateSystem(preserveAspectRatio=false)),

@@ -85,11 +85,19 @@ model FinCoil_vs_2 "Reversible finned coil model with defrost block"
         origin={-110,-50})));
    Modelica.Blocks.Interfaces.IntegerInput HP_operative_status annotation (Placement(transformation(extent={{-116,-62},{-100,-46}}),
      iconTransformation(extent={{-122,68},{-100,90}})));
-     Modelica.Blocks.Math.Add add annotation (Placement(transformation(extent={{58,-22},{70,-10}})));
-  Modelica.Blocks.Math.Gain gain(k=0.5) annotation (Placement(transformation(extent={{76,-18},{82,-12}})));
-  Modelica.Blocks.Interfaces.BooleanInput DefInput annotation (Placement(transformation(extent={{-116,32},{-100,48}}), iconTransformation(extent={{-116,32},{-100,48}})));
+   Modelica.Blocks.Math.Add add annotation (Placement(transformation(extent={{58,-22},{70,-10}})));
+   Modelica.Blocks.Math.Gain gain(k=0.5) annotation (Placement(transformation(extent={{76,-18},{82,-12}})));
+   Modelica.Blocks.Interfaces.BooleanInput DefInput annotation (Placement(transformation(extent={{-116,32},{-100,48}}), iconTransformation(extent={{-116,32},{-100,48}})));
+   Modelica.Blocks.Interfaces.RealOutput Pow_secondary(unit="W") =  port_a.m_flow*(senSpeEntOut.h_out - senSpeEnt.h_out) "Medium temperature" annotation (Placement(transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=0,
+        origin={110,84}), iconTransformation(
+        extent={{-10,-10},{10,10}},
+        rotation=180,
+        origin={-110,-50})));
 
   // =================EQUATION BLOCK===============================================================================================================================================================
+
 
 equation
 
@@ -128,6 +136,7 @@ equation
   m_ice = defrost_vs_1.m_ice;
   UA_ice = UA/(1 +k_ice* m_ice);
   NTU = UA_ice/(m_flow_safe*cp);
+
 
   // ------------Evaluation of the efficency---------------------------------------------------------------------------------------------------------------------------------------------------------
 
